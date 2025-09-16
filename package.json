@@ -1,0 +1,29 @@
+{
+  "name": "voice-assist-plugin",
+  "version": "0.1.0",
+  "description": "Framework-agnostic speech-to-text and AI text assistant plugin for web text inputs.",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "speech-to-text",
+    "ai",
+    "plugin",
+    "text-assistant",
+    "ui"
+  ],
+  "author": "",
+  "license": "MIT"
+}
