@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Voice Assist Plugin demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 2rem;
+        background: #f8fafc;
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+      }
+
+      textarea,
+      input,
+      [contenteditable="true"] {
+        width: 100%;
+        min-height: 160px;
+        border-radius: 12px;
+        border: 1px solid #cbd5f5;
+        padding: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
+        background: white;
+      }
+
+      [contenteditable="true"] {
+        min-height: 220px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Voice Assist Plugin</h1>
+    <p>Click in any text field and try speech-to-text or the AI actions.</p>
+    <div class="demo-grid">
+      <label>
+        Plain textarea
+        <textarea placeholder="Try speaking or use AI actions..."></textarea>
+      </label>
+      <label>
+        Plain input field
+        <input type="text" placeholder="Works with single line inputs as well" />
+      </label>
+      <label>
+        Content editable block
+        <div contenteditable="true">
+          You can also use the assistant with contentEditable editors.
+        </div>
+      </label>
+    </div>
+
+    <script type="module">
+      import VoiceAssistPlugin, { DEFAULT_PROMPTS } from '../src/index.js';
+
+      const plugin = new VoiceAssistPlugin({
+        prompts: DEFAULT_PROMPTS,
+        aiConfig: {
+          endpoint: 'https://api.openai.com/v1/chat/completions',
+          model: 'gpt-3.5-turbo'
+          // Provide apiKey here or via the configuration panel.
+        },
+        speechConfig: {
+          locale: 'en-US',
+          insertionMode: 'append'
+        }
+      });
+
+      window.voiceAssistPlugin = plugin;
+    </script>
+  </body>
+</html>
