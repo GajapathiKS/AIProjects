@@ -1,0 +1,17 @@
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Dotnet
+**/bin/
+**/obj/
+
+# Playwright
+playwright-report/
+frontend/test-results/
+
+# Misc
+.env
+*.user
+*.suo
