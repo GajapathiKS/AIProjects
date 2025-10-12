@@ -1,0 +1,15 @@
+nav {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+
+  a {
+    color: #d9e7ff;
+    text-decoration: none;
+  }
+
+  a.active {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+}
