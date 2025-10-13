@@ -2,6 +2,104 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 
+function sanitizeSegment(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+function collectScreenshotArtifacts({ report, runId, artifactDir, timestamp }) {
+  if (!report) {
+    return [];
+  }
+  const screenshotsDir = path.join(artifactDir, 'screenshots');
+  ensureDir(screenshotsDir);
+
+  const collected = [];
+
+  function walkSuites(suites, ancestors = []) {
+    if (!Array.isArray(suites)) return;
+    suites.forEach((suite) => {
+      const suiteTrail = suite?.title ? [...ancestors, suite.title] : ancestors;
+      if (Array.isArray(suite?.tests)) {
+        suite.tests.forEach((test) => {
+          const testTrail = [...suiteTrail, test?.title].filter(Boolean);
+          const project = test?.projectName ?? test?.project ?? '';
+          const results = Array.isArray(test?.results) ? test.results : [];
+          results.forEach((result, resultIndex) => {
+            const status = result?.status ?? test?.outcome ?? (result?.error ? 'failed' : 'passed');
+            const attachments = Array.isArray(result?.attachments) ? result.attachments : [];
+            attachments.forEach((attachment, attachmentIndex) => {
+              const name = attachment?.name?.toLowerCase?.() ?? '';
+              const isImage = attachment?.contentType?.startsWith?.('image/') ?? false;
+              if (!isImage && !name.includes('screenshot')) {
+                return;
+              }
+              const sourcePath = attachment?.path;
+              const hasBody = attachment?.body && typeof attachment.body === 'string';
+              if (!sourcePath && !hasBody) {
+                return;
+              }
+              const slug = sanitizeSegment([
+                ...testTrail,
+                project,
+                status,
+                `r${resultIndex + 1}`,
+                `a${attachmentIndex + 1}`
+              ].filter(Boolean).join('-')) || `run-${runId}`;
+              const ext = path.extname(sourcePath ?? '') || '.png';
+              const destFile = `${String(runId).padStart(4, '0')}-${timestamp}-${slug}${ext}`;
+              const destPath = path.join(screenshotsDir, destFile);
+
+              try {
+                if (sourcePath && fs.existsSync(sourcePath)) {
+                  fs.copyFileSync(sourcePath, destPath);
+                } else if (hasBody) {
+                  const buffer = Buffer.from(attachment.body, 'base64');
+                  fs.writeFileSync(destPath, buffer);
+                } else {
+                  return;
+                }
+                collected.push({
+                  title: testTrail.join(' › '),
+                  project: project || undefined,
+                  status,
+                  fileName: destFile,
+                  relativePath: path.join('screenshots', destFile)
+                });
+              } catch (error) {
+                console.warn(`Failed to capture screenshot artifact for run ${runId}:`, error);
+              }
+            });
+          });
+        });
+      }
+      if (Array.isArray(suite?.suites)) {
+        walkSuites(suite.suites, suiteTrail);
+      }
+    });
+  }
+
+  walkSuites(report?.suites ?? []);
+  return collected;
+}
+
+function countTests(suites) {
+  if (!Array.isArray(suites)) return 0;
+  return suites.reduce((total, suite) => {
+    const own = Array.isArray(suite?.tests) ? suite.tests.length : 0;
+    return total + own + countTests(suite?.suites ?? []);
+  }, 0);
+}
+
 /**
  * Run Playwright tests for the teks-mvp app.
  * @param {object} opts
@@ -19,10 +117,11 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
       return reject(new Error(`Playwright project not found at ${frontendDir}`));
     }
 
-    fs.mkdirSync(artifactDir, { recursive: true });
+    ensureDir(artifactDir);
     const stdoutPath = path.join(artifactDir, 'stdout.log');
     const stderrPath = path.join(artifactDir, 'stderr.log');
     const jsonReportPath = path.join(artifactDir, 'report.json');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
     const out = fs.createWriteStream(stdoutPath);
     const err = fs.createWriteStream(stderrPath);
@@ -55,6 +154,7 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
     });
 
     let jsonBuffer = '';
+    let report = null;
     child.stdout.on('data', (chunk) => {
       out.write(chunk);
       jsonBuffer += chunk.toString();
@@ -80,8 +180,8 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
         if (startBracket !== -1 && lastBracket !== -1) {
           const jsonText = jsonBuffer.slice(startBracket, lastBracket + 1);
           fs.writeFileSync(jsonReportPath, jsonText);
-          const report = JSON.parse(jsonText);
-          const total = report?.suites?.[0]?.specs?.length ?? report?.stats?.tests ?? undefined;
+          report = JSON.parse(jsonText);
+          const total = report?.stats?.tests ?? countTests(report?.suites ?? []);
           const failures = report?.stats?.failures ?? 0;
           status = failures > 0 ? 'failed' : status;
           summary = `Tests: ${total ?? 'n/a'}, Failures: ${failures}`;
@@ -89,6 +189,13 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
       } catch (e) {
         // Leave default summary on parse failure
       }
+
+      const screenshots = collectScreenshotArtifacts({
+        report,
+        runId,
+        artifactDir,
+        timestamp
+      });
 
       // Copy test-results folder for artifacts
       try {
@@ -99,7 +206,12 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
         }
       } catch {}
 
-      resolve({ status, summary, jsonReportPath });
+      resolve({
+        status,
+        summary,
+        jsonReportPath: path.relative(artifactDir, jsonReportPath),
+        screenshots
+      });
     });
   });
 }
