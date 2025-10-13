@@ -30,6 +30,7 @@ The `portal/test-portal` workspace already includes the first working slice of t
 - **Persistence Layer** — `server/storage.js` wraps a SQLite data store (via `better-sqlite3`) that tracks environments, scenarios, run metadata, and artifact paths.
 - **Playwright Execution** — `server/playwrightRunner.js` resolves environment context, injects configured auth headers, and captures rich result objects (with screenshot references) for each run.
 - **Express API** — `server/index.js` exposes REST endpoints for onboarding environments/tests, requesting ad-hoc runs, and browsing run history.
+- **Config-Driven Onboarding** — `server/onboarding.js` + CLI/API/MCP tooling apply JSON configs to bulk-create environments and Playwright scenarios.
 - **MCP Server** — `server/mcpServer.js` registers the same operations as Model Context Protocol tools, enabling AI clients to list, create, update, delete, and execute portal entities over stdio.
 - **Frontend Hooks** — The React/Vite shell (see `src` under `portal/test-portal`) consumes the REST layer to visualize onboarding state and run activity.
 

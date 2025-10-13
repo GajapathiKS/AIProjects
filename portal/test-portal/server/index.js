@@ -12,6 +12,7 @@ import {
   updateTestCase
 } from './storage.js';
 import { enqueueRun, scheduleEligibleRuns } from './runManager.js';
+import { applyOnboardingConfig, loadOnboardingConfig } from './onboarding.js';
 
 const app = express();
 app.use(express.json());
@@ -91,6 +92,32 @@ app.get('/api/test-runs', (req, res) => {
 
 app.get('/api/metrics', (_req, res) => {
   res.json(getMetrics());
+});
+
+app.post('/api/onboarding', (req, res) => {
+  try {
+    const { config: inlineConfig, path: configPath, dryRun } = req.body ?? {};
+    let payloadInput = inlineConfig ?? configPath ?? null;
+
+    if (!payloadInput) {
+      const inline = {};
+      if (req.body?.environments) inline.environments = req.body.environments;
+      if (req.body?.testCases) inline.testCases = req.body.testCases;
+      if (Object.keys(inline).length > 0) {
+        payloadInput = inline;
+      }
+    }
+
+    if (!payloadInput) {
+      throw new Error('Provide a config object, JSON string, or path to apply onboarding.');
+    }
+
+    const config = loadOnboardingConfig(payloadInput);
+    const result = applyOnboardingConfig(config, { dryRun: !!dryRun });
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error?.message ?? String(error) });
+  }
 });
 
 setInterval(scheduleEligibleRuns, 60 * 1000);
