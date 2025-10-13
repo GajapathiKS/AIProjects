@@ -43,6 +43,7 @@ Artifacts are saved under `data/artifacts/run-<id>/` with:
 - stdout.log / stderr.log
 - report.json (Playwright JSON reporter)
 - metadata.json
+- screenshots/ (auto-collected pass/fail evidence with run- and test-specific names)
 
 ## Configuration
 
@@ -67,7 +68,14 @@ Key features:
 cd portal/test-portal
 npm install
 npm run start:server # starts API on http://localhost:4001
+npm run start:mcp    # starts the Playwright MCP server over stdio
 npm run dev         # starts Vite dev server on http://localhost:4201
 ```
 
-Environments capture target API URLs and credentials. Scenarios can be scheduled and triggered manually which simulates dispatching a Playwright MCP job. Extend `server/index.js` to call your MCP Server endpoint when a scenario is triggered and populate the generated artifact folder (`data/artifacts/run-<id>`) with Playwright output.
+When `start:mcp` is executed the server exposes MCP tools for:
+
+- Managing environments (`list-environments`, `create-environment`, `update-environment`).
+- Authoring test cases (`list-test-cases`, `create-test-case`, `update-test-case`, `delete-test-case`).
+- Triggering and inspecting executions (`run-test-case`, `list-test-runs`).
+
+Environments capture target API URLs and credentials. Scenarios can be scheduled and triggered manually which simulates dispatching a Playwright MCP job. Both the REST API (`server/index.js`) and the MCP server share the same persistence utilities in `server/storage.js`/`server/runManager.js`, so runs triggered from either surface populate `data/artifacts/run-<id>/` with Playwright output.
