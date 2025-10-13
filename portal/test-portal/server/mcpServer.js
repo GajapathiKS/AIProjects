@@ -14,6 +14,7 @@ import {
   updateTestCase
 } from './storage.js';
 import { enqueueRun } from './runManager.js';
+import { applyOnboardingConfig, loadOnboardingConfig } from './onboarding.js';
 
 const environmentBaseSchema = z.object({
   name: z.string().min(1),
@@ -231,6 +232,23 @@ async function main() {
   }, async ({ testCaseId } = {}) => {
     const runs = listRuns({ testCaseId });
     return { content: asContent(runs) };
+  });
+
+  server.registerTool('apply-onboarding-config', {
+    title: 'Apply Onboarding Config',
+    description: 'Bulk create or update environments and test cases from a config file or JSON string.',
+    inputSchema: z.object({
+      config: z.union([z.string(), z.record(z.any())]).optional(),
+      path: z.string().optional(),
+      dryRun: z.boolean().optional()
+    }).refine(data => data.config || data.path, {
+      message: 'Provide either config or path.'
+    })
+  }, async ({ config, path: configPath, dryRun }) => {
+    const source = config ?? configPath;
+    const onboardingConfig = loadOnboardingConfig(source);
+    const result = applyOnboardingConfig(onboardingConfig, { dryRun: !!dryRun });
+    return { content: asContent(result) };
   });
 
   const transport = new StdioServerTransport();

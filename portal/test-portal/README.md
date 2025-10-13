@@ -120,6 +120,48 @@ Below are curl snippets that exercise the main flows while the API server is run
      - `test-results/` – Playwright trace + attachments.
      - `screenshots/` – auto-captured evidence with run-aware filenames.
 
+## Bulk onboarding from config
+
+When you already know the environments and scenarios you want to register, apply them in one shot using the shared onboarding helper. The helper understands JSON payloads that look like [`onboarding.sample.json`](./onboarding.sample.json).
+
+### CLI (recommended for local seeding)
+
+```bash
+# Preview the actions
+npm run onboard -- --dry-run --file onboarding.sample.json
+
+# Apply changes
+npm run onboard -- --file onboarding.sample.json
+```
+
+### REST API
+
+```bash
+curl -X POST http://localhost:4001/api/onboarding \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "path": "onboarding.sample.json"
+      }'
+```
+
+You can also send the entire JSON config inline instead of the `path` property. Include `"dryRun": true` in the body to see the diff without modifying the database.
+
+### MCP server
+
+From an MCP-aware client, call the `apply-onboarding-config` tool with either a JSON string or a file path:
+
+```
+{
+  "tool": "apply-onboarding-config",
+  "arguments": {
+    "path": "onboarding.sample.json",
+    "dryRun": false
+  }
+}
+```
+
+The response summarizes which environments and test cases were created, updated, skipped, and any validation errors encountered.
+
 ## Scheduling runs
 
 Set the `schedule` field on a test case to `hourly` or `nightly` to let the portal enqueue runs automatically. The scheduler runs every minute and looks at `lastRunAt` timestamps to decide when to trigger the next execution.

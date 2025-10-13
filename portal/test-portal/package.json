@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "start:server": "node server/index.js",
-    "start:mcp": "node server/mcpServer.js"
+    "start:mcp": "node server/mcpServer.js",
+    "onboard": "node scripts/onboard.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",

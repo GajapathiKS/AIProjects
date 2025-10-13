@@ -1,0 +1,41 @@
+{
+  "environments": [
+    {
+      "name": "Local UI",
+      "type": "web",
+      "baseUrl": "http://localhost:4200",
+      "authType": "token",
+      "authToken": "${LOCAL_TOKEN}",
+      "notes": "Local Angular dev server"
+    },
+    {
+      "name": "Local API",
+      "type": "api",
+      "baseUrl": "https://localhost:7140",
+      "authType": "none",
+      "notes": "Special Programs API running via dotnet run"
+    }
+  ],
+  "testCases": [
+    {
+      "title": "Students smoke",
+      "feature": "Students",
+      "type": "playwright",
+      "environment": "Local UI",
+      "entryPoint": "tests/e2e/students.spec.ts",
+      "steps": ["login", "navigate", "assert"],
+      "schedule": "manual",
+      "tags": ["students", "smoke"]
+    },
+    {
+      "title": "Assignments e2e",
+      "feature": "Assignments",
+      "type": "playwright",
+      "environment": "Local UI",
+      "entryPoint": "tests/e2e/assignments.spec.ts",
+      "schedule": "nightly",
+      "tags": ["assignments", "regression"],
+      "captureArtifacts": true
+    }
+  ]
+}
