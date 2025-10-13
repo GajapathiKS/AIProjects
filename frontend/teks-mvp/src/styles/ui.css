@@ -1,0 +1,30 @@
+/* Shared UI primitives */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td {
+  text-align: left;
+  padding: 0.5rem 0.625rem;
+  border-bottom: 1px solid #e0e6f5;
+}
+.table thead th { color:#394b71; font-weight:600; font-size:.9rem; }
+.table tbody tr:nth-child(odd) { background: #fbfdff; }
+.table tbody tr:hover { background: #f1f6ff; }
+
+.btn { display:inline-flex; align-items:center; gap:.5rem; border:1px solid #b5c7e7; padding:.5rem .75rem; border-radius:6px; background:#f7f9ff; color:#274684; text-decoration:none; cursor:pointer; }
+.btn:hover { background:#eaf1ff; }
+.btn.primary { background:#274684; color:white; border-color:#274684; }
+.btn.primary:hover { background:#1f3a6a; }
+button.btn { font: inherit; }
+
+.form-grid { display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.form-grid label { display:flex; flex-direction:column; gap:.35rem; font-size:.9rem; }
+.form-grid input, .form-grid textarea, .form-grid select { padding:.5rem; border:1px solid #b5c7e7; border-radius:4px; font: inherit; }
+.form-grid .span-2 { grid-column: span 2; }
+.form-grid .span-2 { grid-column: span 2; }
+
+.card { background:white; border:1px solid #b5c7e7; border-radius:8px; padding:1rem; box-shadow: 0 1px 0 rgba(0,0,0,.02); }
+
+/* Active link highlighting (top nav and sidebar) */
+a.active { font-weight: 600; text-decoration: underline; }

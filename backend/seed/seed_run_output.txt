@@ -1,0 +1,11 @@
+Changed database context to 'SpecialProgramsDb'.
+Inserting sample data...
+Msg 547, Level 16, State 1, Server DESKTOP-CFMTR97\LOCALDB#5C425ADF, Line 38
+The INSERT statement conflicted with the FOREIGN KEY constraint "FK_NeedsAssessments_Students_StudentId". The conflict occurred in database "SpecialProgramsDb", table "dbo.Students", column 'Id'.
+The statement has been terminated.
+Msg 547, Level 16, State 1, Server DESKTOP-CFMTR97\LOCALDB#5C425ADF, Line 44
+The INSERT statement conflicted with the FOREIGN KEY constraint "FK_Goals_Students_StudentId". The conflict occurred in database "SpecialProgramsDb", table "dbo.Students", column 'Id'.
+The statement has been terminated.
+Msg 547, Level 16, State 1, Server DESKTOP-CFMTR97\LOCALDB#5C425ADF, Line 50
+The INSERT statement conflicted with the FOREIGN KEY constraint "FK_ProgressUpdates_Goals_GoalId". The conflict occurred in database "SpecialProgramsDb", table "dbo.Goals", column 'Id'.
+The statement has been terminated.

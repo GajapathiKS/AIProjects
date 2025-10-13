@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE } from '../api.config';
 import { BehaviorSubject, tap } from 'rxjs';
 import { AuthResponse, LoginRequest } from '../models/auth';
 
@@ -12,7 +13,7 @@ export class AuthService {
 
   login(payload: LoginRequest) {
     return this.http
-      .post<AuthResponse>(`/api/auth/login`, payload)
+      .post<AuthResponse>(`${API_BASE}/api/auth/login`, payload)
       .pipe(tap(res => {
         this.auth$.next(res);
         localStorage.setItem('teks-auth', JSON.stringify(res));

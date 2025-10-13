@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SpecialPrograms.Api.Data;
 using SpecialPrograms.Api.Dtos;
@@ -7,6 +8,12 @@ namespace SpecialPrograms.Api.Services;
 
 public class GoalService(ApplicationDbContext context) : IGoalService
 {
+    public async Task<GoalDto?> GetAsync(Guid goalId)
+    {
+        var entity = await context.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goalId);
+        return entity is null ? null : ToDto(entity);
+    }
+
     public async Task<GoalDto> CreateAsync(GoalCreateDto dto)
     {
         var entity = new Goal
@@ -30,7 +37,15 @@ public class GoalService(ApplicationDbContext context) : IGoalService
             .AsNoTracking()
             .Where(g => g.StudentId == studentId)
             .OrderByDescending(g => g.TargetDate)
-            .Select(ToDto)
+            .Select(g => new GoalDto(
+                g.Id,
+                g.StudentId,
+                g.Description,
+                g.Category,
+                g.Measurement,
+                g.Owner,
+                g.TargetDate,
+                g.Status))
             .ToListAsync();
     }
 

@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<ProgressUpdate> ProgressUpdates => Set<ProgressUpdate>();
     public DbSet<UserAccount> Users => Set<UserAccount>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,5 +41,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<UserAccount>()
             .HasIndex(u => u.Username)
             .IsUnique();
+
+        modelBuilder.Entity<Assignment>()
+            .HasOne(a => a.Student!)
+            .WithMany()
+            .HasForeignKey(a => a.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

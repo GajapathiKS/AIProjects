@@ -4,7 +4,8 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
-    "test": "ng test"
+    "test": "ng test",
+    "test:e2e": "playwright test -c playwright.config.ts"
   },
   "private": true,
   "dependencies": {
@@ -21,6 +22,7 @@
     "zone.js": "^0.14.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.47.2",
     "@angular-devkit/build-angular": "^17.2.1",
     "@angular/cli": "^17.2.1",
     "@angular/compiler-cli": "^17.2.0",

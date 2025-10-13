@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SpecialPrograms.Api.Data;
 using SpecialPrograms.Api.Dtos;
@@ -30,7 +31,15 @@ public class ProgressService(ApplicationDbContext context) : IProgressService
             .AsNoTracking()
             .Where(p => p.GoalId == goalId)
             .OrderByDescending(p => p.RecordedAt)
-            .Select(ToDto)
+            .Select(p => new ProgressUpdateDto(
+                p.Id,
+                p.GoalId,
+                p.Summary,
+                p.Outcome,
+                p.EvidenceUrl,
+                p.NextAction,
+                p.RecordedBy,
+                p.RecordedAt))
             .ToListAsync();
     }
 

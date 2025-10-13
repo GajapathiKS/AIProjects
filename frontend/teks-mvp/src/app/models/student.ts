@@ -64,3 +64,14 @@ export interface ProgressUpdate {
   recordedBy: string;
   recordedAt: string;
 }
+
+export interface Assignment {
+  id: string;
+  studentId: string;
+  title: string;
+  description: string;
+  dueDate?: string;
+  status: string;
+  assignedTo?: string;
+  createdAt?: string;
+}

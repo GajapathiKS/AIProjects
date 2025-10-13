@@ -11,9 +11,12 @@ import { StudentSummary } from '../models/student';
   imports: [NgFor, NgIf, AsyncPipe, RouterLink, ReactiveFormsModule, DatePipe],
   template: `
     <div class="card">
-      <h2>Student Onboarding</h2>
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <div class="grid">
+      <div style="display:flex; align-items:center; justify-content: space-between;">
+        <h2>Students</h2>
+        <button class="btn primary" type="submit" form="onboardForm" [disabled]="form.invalid || form.pending">Add Student</button>
+      </div>
+      <form id="onboardForm" [formGroup]="form" (ngSubmit)="submit()" class="form-grid" style="margin-top:.75rem;">
+        <div class="form-grid">
           <label>
             Local ID
             <input formControlName="localId" />
@@ -55,15 +58,14 @@ import { StudentSummary } from '../models/student';
             <input type="date" formControlName="nextReviewDate" />
           </label>
         </div>
-        <button type="submit" [disabled]="form.invalid || form.pending">Enroll Student</button>
       </form>
     </div>
 
     <div class="card">
-      <h2>Active Students</h2>
+      <h3>Active Students</h3>
       <div *ngIf="students | async as items; else loading">
         <p *ngIf="!items.length">No students enrolled yet.</p>
-        <table *ngIf="items.length">
+        <table class="table" *ngIf="items.length">
           <thead>
             <tr>
               <th>Local ID</th>
@@ -84,8 +86,8 @@ import { StudentSummary } from '../models/student';
               <td>{{ student.campus }}</td>
               <td>{{ student.programFocus }}</td>
               <td>{{ student.activeGoals }}</td>
-              <td>{{ student.nextReviewDate | date:'shortDate' || 'TBD' }}</td>
-              <td><a [routerLink]="['/students', student.id]">Open</a></td>
+              <td>{{ student.nextReviewDate | date:'M/d/yyyy' || 'TBD' }}</td>
+              <td><a class="btn" [routerLink]="['/students', student.id]">Open</a></td>
             </tr>
           </tbody>
         </table>
@@ -95,37 +97,7 @@ import { StudentSummary } from '../models/student';
       </ng-template>
     </div>
   `,
-  styles: [`
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .grid {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-    label {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.9rem;
-    }
-    input {
-      padding: 0.5rem;
-      border: 1px solid #b5c7e7;
-      border-radius: 4px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 0.5rem;
-      border-bottom: 1px solid #e0e6f5;
-    }
-  `]
+  styles: []
 })
 export class StudentListPageComponent {
   private fb = inject(FormBuilder);

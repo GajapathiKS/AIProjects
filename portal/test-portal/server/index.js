@@ -2,6 +2,7 @@ import express from 'express';
 import Database from 'better-sqlite3';
 import path from 'node:path';
 import fs from 'node:fs';
+import { runPlaywright } from './playwrightRunner.js';
 
 const dataDir = path.join(process.cwd(), 'data');
 const artifactDir = path.join(dataDir, 'artifacts');
@@ -114,7 +115,7 @@ function mapRun(row) {
   };
 }
 
-function enqueueRun(testCase, triggeredBy = 'manual') {
+async function enqueueRun(testCase, triggeredBy = 'manual') {
   const start = new Date().toISOString();
   const insert = db.prepare(`
     INSERT INTO test_runs (test_case_id, status, triggered_by, started_at)
@@ -141,20 +142,35 @@ function enqueueRun(testCase, triggeredBy = 'manual') {
 
   fs.writeFileSync(path.join(runFolder, 'metadata.json'), JSON.stringify(metadata, null, 2));
 
-  // Simulate asynchronous execution that could integrate with Playwright MCP server
-  setTimeout(() => {
-    const finish = new Date().toISOString();
-    const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
-    const log = `Run ${runId} executed for test case ${testCase.title || testCase.name} in environment ${metadata.environmentId}.`;
+  // Trigger Playwright run asynchronously
+  (async () => {
+    try {
+      // Resolve environment row
+      const env = db.prepare('SELECT * FROM environments WHERE id = ?').get(metadata.environmentId);
+      const result = await runPlaywright({
+        runId,
+        testCase,
+        environment: env,
+        artifactDir: runFolder
+      });
 
-    fs.writeFileSync(path.join(runFolder, 'playwright-command.txt'),
-      `npx playwright test ${metadata.entryPoint} --project=${metadata.environmentId}\n`);
-
-    db.prepare('UPDATE test_runs SET status = ?, finished_at = ?, log = ?, artifact_path = ? WHERE id = ?')
-      .run('passed', finish, log, artifactPath, runId);
-    db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
-      .run(finish, 'passed', testCase.id);
-  }, 1200);
+      const finish = new Date().toISOString();
+      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
+      const log = `Run ${runId} ${result.status}. ${result.summary}`;
+      db.prepare('UPDATE test_runs SET status = ?, finished_at = ?, log = ?, artifact_path = ? WHERE id = ?')
+        .run(result.status, finish, log, artifactPath, runId);
+      db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
+        .run(finish, result.status, testCase.id);
+    } catch (e) {
+      const finish = new Date().toISOString();
+      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
+      const log = `Run ${runId} failed to start: ${e?.message ?? e}`;
+      db.prepare('UPDATE test_runs SET status = ?, finished_at = ?, log = ?, artifact_path = ? WHERE id = ?')
+        .run('failed', finish, log, artifactPath, runId);
+      db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
+        .run(finish, 'failed', testCase.id);
+    }
+  })();
 
   return mapRun({
     id: runId,

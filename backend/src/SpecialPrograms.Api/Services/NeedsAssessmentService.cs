@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SpecialPrograms.Api.Data;
 using SpecialPrograms.Api.Dtos;
@@ -13,7 +14,14 @@ public class NeedsAssessmentService(ApplicationDbContext context) : INeedsAssess
             .AsNoTracking()
             .Where(n => n.StudentId == studentId)
             .OrderByDescending(n => n.CreatedAt)
-            .Select(ToDto)
+            .Select(n => new NeedsAssessmentDto(
+                n.Id,
+                n.StudentId,
+                n.AcademicNeeds,
+                n.SupportServices,
+                n.InstructionalStrategies,
+                n.AssessmentTools,
+                n.CreatedAt))
             .ToListAsync();
     }
 

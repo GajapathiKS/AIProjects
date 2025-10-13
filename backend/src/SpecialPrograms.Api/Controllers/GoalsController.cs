@@ -17,6 +17,13 @@ public class GoalsController(IGoalService goals, IProgressService progress) : Co
         return Ok(result);
     }
 
+    [HttpGet("{goalId}")]
+    public async Task<ActionResult<GoalDto>> GetById(Guid goalId)
+    {
+        var goal = await goals.GetAsync(goalId);
+        return goal is null ? NotFound() : Ok(goal);
+    }
+
     [HttpPost]
     public async Task<ActionResult<GoalDto>> Post(GoalCreateDto dto)
     {

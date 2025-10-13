@@ -1,0 +1,1 @@
+{"ast":null,"code":"// Central API base URL for the frontend to call the backend API during development\nexport const API_BASE = 'https://localhost:7140';","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

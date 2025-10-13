@@ -16,32 +16,58 @@ public class AuthService : IAuthService
     private readonly ApplicationDbContext _context;
     private readonly SeedUserOptions _seedUser;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         ApplicationDbContext context,
         IOptions<SeedUserOptions> seedUser,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<AuthService> logger)
     {
         _context = context;
         _seedUser = seedUser.Value;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
-        if (user is null)
+        try
         {
-            return null;
-        }
+            _logger.LogInformation("Login attempt for user {Username}", request.Username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
+            if (user is null)
+            {
+                _logger.LogWarning("Login failed: user {Username} not found", request.Username);
+                return null;
+            }
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            var verified = false;
+            try
+            {
+                verified = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying password for user {Username}", request.Username);
+                return null;
+            }
+
+            if (!verified)
+            {
+                _logger.LogWarning("Login failed: invalid password for user {Username}", request.Username);
+                return null;
+            }
+
+            _logger.LogInformation("Login successful for user {Username}", request.Username);
+            var token = CreateToken(user);
+            return new AuthResponse(token, user.Username, user.Role);
+        }
+        catch (Exception ex)
         {
-            return null;
+            _logger.LogError(ex, "Unexpected error during login for {Username}", request?.Username);
+            throw;
         }
-
-        var token = CreateToken(user);
-        return new AuthResponse(token, user.Username, user.Role);
     }
 
     public async Task EnsureSeedUserAsync()
