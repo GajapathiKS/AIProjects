@@ -1,81 +1,152 @@
 # Playwright MCP Test Portal
 
-This portal lets you manage environments and test cases, and run Playwright end‑to‑end tests for the teks‑mvp app. Runs are recorded with logs and JSON reports under `data/artifacts/`.
+Automation control plane for the TEKS MVP Playwright test suite. The portal lets you:
 
-## Quick start
+- catalogue environments (Dev/QA/Prod, different auth strategies, etc.)
+- onboard Playwright scenarios per feature/page with schedules and metadata
+- trigger runs manually, via the built-in scheduler, or through the MCP server
+- inspect execution history, logs, JSON reports, traces, and screenshot evidence
 
-- Start the API server:
-  - `npm run start:server`
-- (Optional) Start the UI: `npm run dev`
+All persistence lives under `data/` (SQLite database and run artifacts).
 
-## Create an environment
+## Prerequisites
 
-POST to `/api/environments`:
+| Requirement | Notes |
+|-------------|-------|
+| Node.js 18+ | Required for the API, UI, and MCP server. |
+| npm         | Used to install dependencies and run scripts. |
+| Playwright deps | Ensure `frontend/teks-mvp` has run `npm install` and `npx playwright install` at least once. |
 
-```
-{
-  "name": "Local",
-  "type": "web",
-  "baseUrl": "http://localhost:4200",
-  "authType": "none"
-}
-```
-
-## Register a test case
-
-POST to `/api/test-cases`:
+From the repo root, you should have the following structure:
 
 ```
-{
-  "title": "Smoke",
-  "type": "playwright",
-  "environmentId": 1,
-  "entryPoint": "tests/e2e/students.spec.ts",
-  "steps": ["login", "navigate", "assert"]
-}
+frontend/teks-mvp      # Playwright project that contains the tests to execute
+portal/test-portal     # This portal
 ```
 
-## Run it
-
-POST `/api/test-cases/:id/run` → returns a run id. Poll `/api/test-runs?testCaseId=:id` to see status.
-
-Artifacts are saved under `data/artifacts/run-<id>/` with:
-- stdout.log / stderr.log
-- report.json (Playwright JSON reporter)
-- metadata.json
-- screenshots/ (auto-collected pass/fail evidence with run- and test-specific names)
-
-## Configuration
-
-- UI base URL is read from the Environment `baseUrl`.
-- Backend API base for test seed utilities is read from `TEST_API_BASE` env var (defaults to `https://localhost:7140`).
-
-## Notes
-
-This invokes Playwright via `npx` in `frontend/teks-mvp`, using `playwright.config.ts`. Adjust as needed for other projects.# Playwright MCP Test Portal
-
-Lightweight React + Express portal to orchestrate Playwright MCP Server scenarios against the TEKS MVP backend.
-
-Key features:
-
-- Environment catalogue with Dev/QA/Prod metadata, auth strategies, and operational notes.
-- Test case authoring with UI/API/E2E classification, step inventories, scheduling (manual/hourly/nightly), and artifact capture flags.
-- On-demand or scheduled Playwright MCP run simulation that persists run history, captures artifact metadata, and surfaces run telemetry on the dashboard.
-
-## Running locally
+## Install
 
 ```bash
 cd portal/test-portal
 npm install
-npm run start:server # starts API on http://localhost:4001
-npm run start:mcp    # starts the Playwright MCP server over stdio
-npm run dev         # starts Vite dev server on http://localhost:4201
 ```
 
-When `start:mcp` is executed the server exposes MCP tools for:
+The first run will create `data/app.db` and seed the schema automatically.
 
-- Managing environments (`list-environments`, `create-environment`, `update-environment`).
-- Authoring test cases (`list-test-cases`, `create-test-case`, `update-test-case`, `delete-test-case`).
-- Triggering and inspecting executions (`run-test-case`, `list-test-runs`).
+## Running the services
 
-Environments capture target API URLs and credentials. Scenarios can be scheduled and triggered manually which simulates dispatching a Playwright MCP job. Both the REST API (`server/index.js`) and the MCP server share the same persistence utilities in `server/storage.js`/`server/runManager.js`, so runs triggered from either surface populate `data/artifacts/run-<id>/` with Playwright output.
+### 1. REST API (required)
+
+```bash
+npm run start:server
+```
+
+- Starts Express on `http://localhost:4001`.
+- Handles environment + test case CRUD, run orchestration, metrics, and scheduling.
+- Every minute the scheduler checks for test cases with `schedule !== 'manual'` and triggers them when due.
+
+### 2. Web UI (optional)
+
+```bash
+npm run dev
+```
+
+- Vite dev server on `http://localhost:4201` (proxying API calls to `http://localhost:4001`).
+- Provides forms to manage environments/test cases and to inspect run history and artifacts.
+
+### 3. MCP Server (optional)
+
+```bash
+npm run start:mcp
+```
+
+- Exposes a Model Context Protocol server over stdio with tools for onboarding, scheduling, and running cases.
+- Connect any MCP-compatible client (for example [Claude Desktop](https://www.anthropic.com/claude/desktop) or custom tooling) and point it at the command `node server/mcpServer.js`.
+- Available tools: `list-environments`, `create-environment`, `update-environment`, `list-test-cases`, `create-test-case`, `update-test-case`, `delete-test-case`, `run-test-case`, `list-test-runs`.
+
+> **Tip:** When testing locally you can open a second terminal and run `node server/mcpServer.js` directly. The server logs "Playwright MCP server is ready" to stderr once it is accepting connections.
+
+## Typical workflow (REST API)
+
+Below are curl snippets that exercise the main flows while the API server is running.
+
+1. **Create an environment** (configure base URL + auth):
+   ```bash
+   curl -X POST http://localhost:4001/api/environments \
+     -H 'Content-Type: application/json' \
+     -d '{
+       "name": "Local",
+       "type": "web",
+       "baseUrl": "http://localhost:4200",
+       "authType": "token",
+       "authToken": "${LOCAL_TOKEN}"
+     }'
+   ```
+
+2. **Register a Playwright scenario** (feature/page onboarding):
+   ```bash
+   curl -X POST http://localhost:4001/api/test-cases \
+     -H 'Content-Type: application/json' \
+     -d '{
+       "title": "Students smoke",
+       "feature": "Students",
+       "type": "playwright",
+       "environmentId": 1,
+       "entryPoint": "tests/e2e/students.spec.ts",
+       "steps": ["login", "navigate", "assert"],
+       "schedule": "manual",
+       "captureArtifacts": true,
+       "tags": ["smoke"]
+     }'
+   ```
+
+3. **Trigger a run manually**:
+   ```bash
+   curl -X POST http://localhost:4001/api/test-cases/1/run \
+     -H 'Content-Type: application/json' \
+     -d '{ "triggeredBy": "manual" }'
+   ```
+
+4. **Check run status**:
+   ```bash
+   curl "http://localhost:4001/api/test-runs?testCaseId=1"
+   ```
+
+5. **Review artifacts**:
+   - Each run gets a folder under `data/artifacts/run-<runId>/` containing:
+     - `metadata.json` – original payload, environment, scheduling info, completion summary.
+     - `stdout.log` / `stderr.log` – raw Playwright output.
+     - `report.json` – parsed Playwright JSON reporter output.
+     - `test-results/` – Playwright trace + attachments.
+     - `screenshots/` – auto-captured evidence with run-aware filenames.
+
+## Scheduling runs
+
+Set the `schedule` field on a test case to `hourly` or `nightly` to let the portal enqueue runs automatically. The scheduler runs every minute and looks at `lastRunAt` timestamps to decide when to trigger the next execution.
+
+You can still trigger the same case manually via API or MCP; the scheduler will pick up subsequent windows based on the most recent completion time.
+
+## Resetting state
+
+To wipe the portal and start clean:
+
+```bash
+rm -rf data/app.db data/artifacts
+npm run start:server
+```
+
+This recreates the SQLite database and artifact folders on next launch.
+
+## Troubleshooting
+
+- **Playwright project not found:** ensure the `frontend/teks-mvp` directory exists relative to the repo root and contains the Playwright tests.
+- **Missing browser binaries:** run `cd ../../frontend/teks-mvp && npx playwright install` to install the required browsers.
+- **Authentication secrets:** use environment-specific tokens in the `authToken` field or extend the schema in `server/storage.js` to integrate with secret stores.
+
+## Related resources
+
+- `server/index.js` – REST API entry point.
+- `server/mcpServer.js` – MCP stdio server exposing automation tools.
+- `server/runManager.js` – queueing, scheduler, and Playwright invocation.
+- `server/storage.js` – SQLite schema + persistence helpers.
+
