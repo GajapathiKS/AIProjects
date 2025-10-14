@@ -1,0 +1,11 @@
+{
+  "runId": 16,
+  "triggeredBy": "portal",
+  "startedAt": "2025-10-13T12:41:02.839Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/students.spec.ts",
+  "captureArtifacts": true,
+  "steps": [
+    "[\"login\", \"navigate\", \"assert\"]"
+  ]
+}

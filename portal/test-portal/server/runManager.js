@@ -27,7 +27,7 @@ function normalizeTestCase(input) {
   return null;
 }
 
-export function enqueueRun(testCase, triggeredBy = 'manual') {
+export function enqueueRun(testCase, triggeredBy = 'manual', environmentOverrides = {}) {
   const row = normalizeTestCase(testCase);
   if (!row) {
     throw new Error('Test case not found');
@@ -42,6 +42,14 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
   fs.mkdirSync(runFolder, { recursive: true });
 
   const steps = Array.isArray(row.steps) ? row.steps : JSON.parse(row.steps);
+  const sanitizedOverrides = (() => {
+    const o = { ...(environmentOverrides ?? {}) };
+    if (typeof o.authToken === 'string' && o.authToken.length > 0) {
+      o.authToken = '***';
+    }
+    return Object.keys(o).length ? o : undefined;
+  })();
+
   const metadata = {
     runId,
     triggeredBy,
@@ -49,7 +57,8 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
     environmentId: row.environment_id,
     entryPoint: row.entry_point,
     captureArtifacts: !!row.capture_artifacts,
-    steps
+    steps,
+    environmentOverrides: sanitizedOverrides
   };
 
   const metadataPath = path.join(runFolder, 'metadata.json');
@@ -68,10 +77,11 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
   (async () => {
     try {
       const env = getEnvironmentRow(metadata.environmentId);
+      const mergedEnv = { ...env, ...(environmentOverrides ?? {}) };
       const result = await runPlaywright({
         runId,
         testCase: row,
-        environment: env,
+        environment: mergedEnv,
         artifactDir: runFolder
       });
       const finish = new Date().toISOString();

@@ -1,0 +1,18 @@
+{
+  "runId": 28,
+  "triggeredBy": "portal",
+  "startedAt": "2025-10-13T13:56:03.065Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/goals-create.spec.ts",
+  "captureArtifacts": true,
+  "steps": [
+    "Login",
+    "Navigate to dashboard",
+    "Capture screenshot"
+  ],
+  "finishedAt": "2025-10-13T13:56:36.400Z",
+  "status": "failed",
+  "summary": "Tests: 0, Failures: 0",
+  "report": "report.json",
+  "screenshots": []
+}

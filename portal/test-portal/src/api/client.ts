@@ -41,6 +41,10 @@ export interface TestRun {
   artifactPath?: string;
 }
 
+export interface TestRunDetails extends TestRun {
+  screenshots?: Array<{ title?: string; status?: string; fileName?: string; url: string; }>;
+}
+
 const apiBase = '/api';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -97,6 +101,9 @@ export const ApiClient = {
   listRuns(testCaseId?: number): Promise<TestRun[]> {
     const query = testCaseId ? `?testCaseId=${testCaseId}` : '';
     return request<TestRun[]>(`/test-runs${query}`);
+  },
+  getRun(id: number): Promise<TestRunDetails> {
+    return request<TestRunDetails>(`/test-runs/${id}`);
   },
   metrics(): Promise<{ environments: number; testCases: number; queuedRuns: number; completedRuns: number; }> {
     return request('/metrics');

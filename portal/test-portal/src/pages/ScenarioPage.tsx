@@ -44,6 +44,15 @@ export default function ScenarioPage() {
     return (runs.value ?? []).filter(run => run.testCaseId === selectedCase);
   }, [runs.value, selectedCase]);
 
+  const [details, setDetails] = useState<Record<number, { screenshots?: { url: string; title?: string; status?: string; fileName?: string; }[] }>>({});
+
+  const loadDetails = async (runId: number) => {
+    try {
+      const data = await ApiClient.getRun(runId);
+      setDetails(prev => ({ ...prev, [runId]: { screenshots: data.screenshots } }));
+    } catch {}
+  };
+
   const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
     if (!form.title || !form.environmentId) return;
@@ -235,6 +244,8 @@ export default function ScenarioPage() {
                   <th>Started</th>
                   <th>Finished</th>
                   <th>Artifacts</th>
+                  <th>Log</th>
+                  <th>Screenshots</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,11 +256,24 @@ export default function ScenarioPage() {
                     <td>{run.triggeredBy}</td>
                     <td>{new Date(run.startedAt).toLocaleString()}</td>
                     <td>{run.finishedAt ? new Date(run.finishedAt).toLocaleString() : '—'}</td>
-                    <td>{run.artifactPath ? <code>{run.artifactPath}</code> : 'pending'}</td>
+                    <td>{run.artifactPath ? <a href={`/${run.artifactPath.replace(/\\/g, '/')}`} target="_blank" rel="noreferrer"><code>{run.artifactPath}</code></a> : 'pending'}</td>
+                    <td>{run.artifactPath ? <a href={`/${run.artifactPath.replace(/\\/g, '/')}/stdout.log`} target="_blank" rel="noreferrer">stdout</a> : '—'}</td>
+                    <td>
+                      <button type="button" onClick={() => loadDetails(run.id)}>Load</button>
+                      {details[run.id]?.screenshots?.length ? (
+                        <div className="thumbs">
+                          {details[run.id].screenshots!.map((s, i) => (
+                            <a key={i} href={s.url} target="_blank" rel="noreferrer" title={s.title ?? s.fileName ?? ''}>
+                              <img src={s.url} alt={s.title ?? s.fileName ?? `shot-${i+1}`} style={{ width: 64, height: 40, objectFit: 'cover', marginRight: 4 }} />
+                            </a>
+                          ))}
+                        </div>
+                      ) : '—'}
+                    </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={6}>No runs yet.</td>
+                    <td colSpan={8}>No runs yet.</td>
                   </tr>
                 )}
               </tbody>

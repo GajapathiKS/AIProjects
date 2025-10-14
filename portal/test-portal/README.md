@@ -66,6 +66,16 @@ npm run start:mcp
 
 > **Tip:** When testing locally you can open a second terminal and run `node server/mcpServer.js` directly. The server logs "Playwright MCP server is ready" to stderr once it is accepting connections.
 
+### 4. Run both (REST + MCP)
+
+```bash
+npm run dev:all
+```
+
+- Starts both the REST API (port 4001) and the MCP stdio server.
+- Prints when the REST API is ready; press Ctrl+C to stop both processes.
+- Use this when you want to drive runs from an MCP client and also view them in the UI/REST.
+
 ## Typical workflow (REST API)
 
 Below are curl snippets that exercise the main flows while the API server is running.
@@ -191,4 +201,34 @@ This recreates the SQLite database and artifact folders on next launch.
 - `server/mcpServer.js` – MCP stdio server exposing automation tools.
 - `server/runManager.js` – queueing, scheduler, and Playwright invocation.
 - `server/storage.js` – SQLite schema + persistence helpers.
+
+## POC: MCP vs REST transports
+
+To see the difference between starting only the MCP server, only the REST API, or both, run:
+
+```powershell
+# From portal/test-portal
+pwsh -File scripts/poc-transport-diff.ps1 -Mode server-only   # Starts REST API, probes /api
+pwsh -File scripts/poc-transport-diff.ps1 -Mode mcp-only      # Starts MCP stdio server, shows REST is unavailable
+pwsh -File scripts/poc-transport-diff.ps1 -Mode both          # Starts both; runs via MCP will show in REST/UI
+```
+
+This script starts processes, waits briefly, probes `http://localhost:4001/api/test-cases`, prints a summary, and then cleans up the processes.
+
+## POC: Trigger via MCP, observe via REST
+
+To demonstrate end-to-end:
+
+```bash
+# Ensure dependencies are installed and Playwright project is set up
+npm run dev:all   # optional: runs both servers; you can also let the demo start the API automatically
+
+# Trigger a run via MCP by test case id
+npm run mcp:run -- --id 4
+
+# Or by title
+npm run mcp:run -- --title "Goals page (simple)"
+```
+
+The script connects to the MCP stdio server, calls the `run-test-case` tool, then polls the REST API `/api/test-runs/:id` for completion and prints a short summary including the first few screenshot URLs.
 

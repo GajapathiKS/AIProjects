@@ -13,6 +13,14 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function expandEnvPlaceholders(value) {
+  if (typeof value !== 'string') return value;
+  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_m, name) => {
+    const v = process.env[name];
+    return typeof v === 'string' ? v : _m; // keep placeholder if not found
+  });
+}
+
 function resolveConfigPath(spec) {
   const cwd = process.cwd();
   const candidate = path.isAbsolute(spec) ? spec : path.join(cwd, spec);
@@ -95,24 +103,24 @@ function asArray(value) {
 
 function normalizeEnvironment(def) {
   return {
-    name: normalizeString(def.name || def.title),
-    type: normalizeString(def.type || def.category || 'web') || 'web',
-    baseUrl: normalizeString(def.baseUrl || def.base_url || def.url),
-    authType: normalizeString(def.authType || def.auth_type || 'none') || 'none',
-    authToken: def.authToken ?? def.auth_token ?? undefined,
-    username: def.username ?? def.user ?? undefined,
-    password: def.password ?? def.pass ?? undefined,
-    notes: normalizeString(def.notes || def.description)
+    name: normalizeString(expandEnvPlaceholders(def.name || def.title)),
+    type: normalizeString(expandEnvPlaceholders(def.type || def.category || 'web')) || 'web',
+    baseUrl: normalizeString(expandEnvPlaceholders(def.baseUrl || def.base_url || def.url)),
+    authType: normalizeString(expandEnvPlaceholders(def.authType || def.auth_type || 'none')) || 'none',
+    authToken: expandEnvPlaceholders(def.authToken ?? def.auth_token ?? undefined),
+    username: expandEnvPlaceholders(def.username ?? def.user ?? undefined),
+    password: expandEnvPlaceholders(def.password ?? def.pass ?? undefined),
+    notes: normalizeString(expandEnvPlaceholders(def.notes || def.description))
   };
 }
 
 function normalizeTestCase(def) {
   return {
-    title: normalizeString(def.title || def.name),
-    description: normalizeString(def.description || ''),
-    feature: normalizeString(def.feature || def.module),
-    type: normalizeString(def.type || 'playwright') || 'playwright',
-    entryPoint: normalizeString(def.entryPoint || def.path || def.spec),
+    title: normalizeString(expandEnvPlaceholders(def.title || def.name)),
+    description: normalizeString(expandEnvPlaceholders(def.description || '')),
+    feature: normalizeString(expandEnvPlaceholders(def.feature || def.module)),
+    type: normalizeString(expandEnvPlaceholders(def.type || 'playwright')) || 'playwright',
+    entryPoint: normalizeString(expandEnvPlaceholders(def.entryPoint || def.path || def.spec)),
     steps: asArray(def.steps),
     schedule: normalizeSchedule(def.schedule),
     captureArtifacts: def.captureArtifacts ?? def.capture_artifacts ?? true,
