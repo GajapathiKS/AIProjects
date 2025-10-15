@@ -146,6 +146,22 @@ MCP scenarios often require API keys (e.g. ChatGPT or GitHub Copilot tokens) as 
 
 3. **Grant the secrets to your MCP client** (ChatGPT, Copilot, Claude, etc.) following their documentation—each token stays outside of the portal database and is read only when invoking MCP scenarios.
 
+<<<<<<< HEAD
+=======
+### Trigger an MCP run from Node (for Codex/ChatGPT integrations)
+
+You can programmatically trigger a run via the MCP server using the provided helper script:
+
+```bash
+npm run start:mcp   # in one terminal (server prints "Playwright MCP server is ready.")
+
+# In another terminal:
+npm run mcp:trigger -- --id 5 --title "codex"
+```
+
+This starts the stdio MCP server and uses an MCP client to call `run-test-case`. The output JSON contains the queued run metadata; poll `/api/test-runs/:id` to follow progress and open artifacts at `/artifacts/run-<id>/`.
+
+>>>>>>> main
 ## Dual onboarding (traditional + MCP)
 
 The portal now distinguishes between traditional Playwright suites and MCP scenarios:

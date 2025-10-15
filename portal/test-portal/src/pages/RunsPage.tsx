@@ -93,7 +93,11 @@ export default function RunsPage() {
                         </ul>
                       ) : '—'}
                     </td>
+<<<<<<< HEAD
                     <td>{run.artifactPath ? <a href={`/${run.artifactPath}`} target="_blank" rel="noreferrer">open</a> : '—'}</td>
+=======
+                    <td>{run.artifactPath ? <a href={`${run.artifactPath}`} target="_blank" rel="noreferrer">open</a> : '—'}</td>
+>>>>>>> main
                   </tr>
                 );
               }) : (

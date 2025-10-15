@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Student goals navigation (MCP)",
+    "description": "Authenticate as an administrator, open the first student record, and inspect\nthe goals table to capture a snapshot for review.\n",
+    "tags": [
+      "regression",
+      "goals"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 15000
+  },
+  "steps": [
+    {
+      "action": "screenshot",
+      "status": "failed",
+      "detail": "Not connected"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\goals-navigation.mcp.yaml"
+}

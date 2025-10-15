@@ -1,0 +1,26 @@
+{
+  "testCases": [
+    {
+      "title": "Goals page (simple)",
+      "feature": "Goals",
+      "type": "playwright",
+      "environment": "TX Dev",
+      "entryPoint": "tests/e2e/goals.spec.ts",
+      "steps": ["login", "navigate", "assert"],
+      "schedule": "manual",
+      "tags": ["goals", "smoke"],
+      "captureArtifacts": true
+    },
+    {
+      "title": "Needs assessment (simple)",
+      "feature": "Needs",
+      "type": "playwright",
+      "environment": "TX Dev",
+      "entryPoint": "tests/e2e/needs.spec.ts",
+      "steps": ["login", "navigate", "assert"],
+      "schedule": "manual",
+      "tags": ["needs", "smoke"],
+      "captureArtifacts": true
+    }
+  ]
+}

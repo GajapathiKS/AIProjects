@@ -10,6 +10,7 @@
     "mcp:convert": "node mcp/convert-spec.js"
   },
   "private": true,
+  "type": "module",
   "dependencies": {
     "@angular/animations": "^17.2.0",
     "@angular/common": "^17.2.0",

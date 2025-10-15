@@ -12,6 +12,12 @@ import {
   updateTestCase
 } from './storage.js';
 import { enqueueRun, scheduleEligibleRuns } from './runManager.js';
+<<<<<<< HEAD
+=======
+import path from 'node:path';
+import fs from 'node:fs';
+import { artifactDir, getRunRow, mapRun } from './storage.js';
+>>>>>>> main
 import { applyOnboardingConfig, loadOnboardingConfig } from './onboarding.js';
 
 const app = express();
@@ -257,7 +263,14 @@ app.post('/api/test-cases/:id/run', (req, res) => {
   if (!testCase) {
     return res.sendStatus(404);
   }
-  const run = enqueueRun(testCase, req.body?.triggeredBy ?? 'manual');
+  const triggeredBy = req.body?.triggeredBy ?? 'manual';
+  const authToken = req.body?.authToken;
+  const environmentOverrides = req.body?.environmentOverrides ?? {};
+  const overrides = { ...environmentOverrides };
+  if (typeof authToken === 'string' && authToken.length > 0) {
+    overrides.authToken = authToken;
+  }
+  const run = enqueueRun(testCase, triggeredBy, overrides);
   res.status(202).json(run);
 });
 
@@ -265,6 +278,31 @@ app.get('/api/test-runs', (req, res) => {
   const testCaseId = typeof req.query.testCaseId === 'string' ? Number(req.query.testCaseId) : undefined;
   const runs = listRuns({ testCaseId: Number.isNaN(testCaseId) ? undefined : testCaseId });
   res.json(runs);
+<<<<<<< HEAD
+=======
+});
+
+app.get('/api/test-runs/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ message: 'Invalid run id' });
+  }
+  const row = getRunRow(id);
+  if (!row) return res.sendStatus(404);
+  const run = mapRun(row);
+  // Normalize artifactPath to always start with / for direct linking
+  if (run.artifactPath && !run.artifactPath.startsWith('/')) {
+    run.artifactPath = '/' + run.artifactPath;
+  }
+  // Expand screenshot URLs for convenience in the UI
+  if (Array.isArray(run.screenshots)) {
+    run.screenshots = run.screenshots.map(sc => ({
+      ...sc,
+      url: `/artifacts/run-${id}/${sc.relativePath}`
+    }));
+  }
+  res.json(run);
+>>>>>>> main
 });
 
 app.get('/api/metrics', (_req, res) => {

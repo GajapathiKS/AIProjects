@@ -1,0 +1,16 @@
+{
+  "runId": 36,
+  "triggeredBy": "auto",
+  "startedAt": "2025-10-15T12:59:07.474Z",
+  "environmentId": 3,
+  "entryPoint": "frontend/teks-mvp/tests/e2e/students.spec.ts",
+  "playwrightMode": "traditional",
+  "mcpSource": "frontend/teks-mvp/tests/e2e/students.spec.ts",
+  "captureArtifacts": true,
+  "steps": [],
+  "finishedAt": "2025-10-15T12:59:55.514Z",
+  "status": "failed",
+  "summary": "Tests: 0, Failures: 0, Skipped: 0",
+  "report": "report.json",
+  "screenshots": []
+}

@@ -1,0 +1,20 @@
+{
+  "runId": 44,
+  "triggeredBy": "auto",
+  "startedAt": "2025-10-15T12:59:07.678Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/goals-create.spec.ts",
+  "playwrightMode": "traditional",
+  "mcpSource": null,
+  "captureArtifacts": true,
+  "steps": [
+    "Login",
+    "Navigate to dashboard",
+    "Capture screenshot"
+  ],
+  "finishedAt": "2025-10-15T12:59:55.212Z",
+  "status": "failed",
+  "summary": "Tests: 0, Failures: 0, Skipped: 0",
+  "report": "report.json",
+  "screenshots": []
+}

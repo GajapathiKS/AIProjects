@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Student assignments overview (MCP)",
+    "description": "Drill into the first student record after login, open the assignments tab,\nand capture evidence that the list or empty state renders.\n",
+    "tags": [
+      "regression",
+      "assignments"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 15000
+  },
+  "steps": [
+    {
+      "action": "screenshot",
+      "status": "failed",
+      "detail": "Not connected"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\student-assignments-overview.mcp.yaml"
+}

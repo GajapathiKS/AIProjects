@@ -1,0 +1,22 @@
+{
+  "runId": 45,
+  "triggeredBy": "auto",
+  "startedAt": "2025-10-15T12:59:07.698Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/goals.spec.ts",
+  "playwrightMode": "traditional",
+  "mcpSource": null,
+  "captureArtifacts": true,
+  "steps": [
+    "Login",
+    "Navigate to dashboard",
+    "Open random Student",
+    "Go to goals page",
+    "create and view goals"
+  ],
+  "finishedAt": "2025-10-15T12:59:24.118Z",
+  "status": "failed",
+  "summary": "Tests: 0, Failures: 0, Skipped: 0",
+  "report": "report.json",
+  "screenshots": []
+}

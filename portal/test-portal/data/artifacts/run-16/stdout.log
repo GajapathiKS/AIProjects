@@ -1,0 +1,4 @@
+
+> teks-mvp@0.0.1 test:e2e
+> playwright test -c playwright.config.ts tests/e2e/students.spec.ts --reporter json --trace on
+

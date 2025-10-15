@@ -1,0 +1,69 @@
+metadata:
+  title: Progress overview (MCP)
+  description: |
+    Login, seed a student, navigate to Progress page, verify heading and New Progress button.
+  tags:
+    - e2e
+    - progress
+config:
+  browser: chromium
+  headless: true
+  baseUrl: "{{environment.baseUrl}}"
+steps:
+  - navigate: "{{config.baseUrl}}/login"
+  - fill:
+      selector: 'input[formcontrolname="username"]'
+      value: '{{secrets.username}}'
+  - fill:
+      selector: 'input[formcontrolname="password"]'
+      value: '{{secrets.password}}'
+  - click:
+      selector: 'button[type="submit"]'
+  - waitFor:
+      selector: 'h1'
+      text: 'Texas TEKS Program Manager'
+  - evaluate:
+      script: |
+        (async () => {
+          async function getToken() {
+            const base = 'https://localhost:7140';
+            const creds = [
+              { username: 'admin', password: 'ChangeMe123!' },
+              { username: 'admin', password: 'ChangeMe123!' }
+            ];
+            for (const c of creds) {
+              const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
+              if (r.ok) { const j = await r.json(); return j.token || j.accessToken; }
+            }
+            throw new Error('Failed to obtain auth token');
+          }
+          const token = await getToken();
+          const stamp = Date.now();
+          const payload = {
+            firstName: `mcp_${stamp}_First`,
+            lastName: `mcp_${stamp}_Last`,
+            dateOfBirth: '2012-01-15',
+            gradeLevel: '5',
+            campus: `mcp_${stamp}_Campus`,
+            guardianContact: `mcp_${stamp}_Guardian`,
+            programFocus: `mcp_${stamp}_Focus`,
+            localId: `mcp_${stamp}`,
+            enrollmentDate: '2024-09-01',
+            nextReviewDate: null
+          };
+          const res = await fetch('https://localhost:7140/api/students', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload) });
+          if (!res.ok) throw new Error('Failed to seed student');
+          const data = await res.json();
+          const id = String(data.id ?? data);
+          window.location.href = `${window.location.origin}/students/${id}/progress`;
+          return true;
+        })()
+  - waitFor:
+      selector: 'h2'
+      text: 'Progress Updates'
+  - expectVisible:
+      selector: 'a.btn.primary, button.btn.primary'
+      text: '+ New Progress'
+  - screenshot:
+      name: 'progress-overview'
+      fullPage: true

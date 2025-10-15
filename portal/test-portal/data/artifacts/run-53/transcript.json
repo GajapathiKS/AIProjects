@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Students overview smoke (MCP)",
+    "description": "Exercise the login flow and verify the students list renders with the add student form\nusing the Model Context Protocol client controls.\n",
+    "tags": [
+      "smoke",
+      "students"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 15000
+  },
+  "steps": [
+    {
+      "action": "screenshot",
+      "status": "failed",
+      "detail": "Not connected"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\students-overview.mcp.yaml"
+}

@@ -1,0 +1,157 @@
+{
+  "config": {
+    "configFile": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\playwright.config.ts",
+    "rootDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.0",
+    "workers": 4,
+    "webServer": {
+      "command": "npm start -- --port 4200",
+      "url": "http://localhost:4200",
+      "reuseExistingServer": true,
+      "timeout": 180000,
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "cwd": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp"
+    }
+  },
+  "suites": [
+    {
+      "title": "goals.spec.ts",
+      "file": "goals.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "goals page renders table or empty state",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 7683,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /dashboard/i })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /dashboard/i })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /dashboard/i })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /dashboard/i })\u001b[22m\n\n    at login (C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\auth.util.ts:19:67)\n    at C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals.spec.ts:6:3",
+                    "location": {
+                      "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\auth.util.ts",
+                      "column": 67,
+                      "line": 19
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mauth.util.ts:19\n\n\u001b[0m \u001b[90m 17 |\u001b[39m\n \u001b[90m 18 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/?$/\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/dashboard/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m }\n \u001b[90m 21 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\auth.util.ts",
+                        "column": 67,
+                        "line": 19
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: /dashboard/i })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: /dashboard/i })\u001b[22m\n\n\n   at auth.util.ts:19\n\n  17 |\n  18 |   await expect(page).toHaveURL(/\\/?$/);\n> 19 |   await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();\n     |                                                                   ^\n  20 | }\n  21 |\n    at login (C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\auth.util.ts:19:67)\n    at C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals.spec.ts:6:3"
+                    },
+                    {
+                      "message": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\.playwright-artifacts-0\\traces\\bb9d194c74d1f273665a-d02594b8f1dae9ce730c.trace'"
+                    },
+                    {
+                      "message": "Error: ENOENT: no such file or directory, open 'C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\.playwright-artifacts-0\\6f7f15dc48f3a8c1bfa1abd6b7bd5bd8.zip'"
+                    },
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-10-15T12:59:16.124Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-goals-page-renders-table-or-empty-state\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-goals-page-renders-table-or-empty-state\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\auth.util.ts",
+                    "column": 67,
+                    "line": 19
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bb9d194c74d1f273665a-d02594b8f1dae9ce730c",
+          "file": "goals.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-15T12:59:12.166Z",
+    "duration": 42898.999,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,148 @@
+
+> teks-mvp@0.0.1 test:e2e
+> playwright test -c playwright.config.ts tests/e2e/goals.spec.ts --reporter json --trace on
+
+{
+  "config": {
+    "configFile": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\playwright.config.ts",
+    "rootDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.0",
+    "workers": 4,
+    "webServer": {
+      "command": "npm start -- --port 4200",
+      "url": "http://localhost:4200",
+      "reuseExistingServer": true,
+      "timeout": 180000,
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "cwd": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp"
+    }
+  },
+  "suites": [
+    {
+      "title": "goals.spec.ts",
+      "file": "goals.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "goals page renders table or empty state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No students",
+                  "location": {
+                    "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals.spec.ts",
+                    "line": 8,
+                    "column": 43
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 1096,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-10-13T14:28:06.798Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No students",
+                      "location": {
+                        "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals.spec.ts",
+                        "line": 8,
+                        "column": 43
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-goals-page-renders-table-or-empty-state\\test-finished-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-goals-page-renders-table-or-empty-state\\trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "bb9d194c74d1f273665a-d02594b8f1dae9ce730c",
+          "file": "goals.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-13T14:28:04.210Z",
+    "duration": 4309.371999999999,
+    "expected": 0,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

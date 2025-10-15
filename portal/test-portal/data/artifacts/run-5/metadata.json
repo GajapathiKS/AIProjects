@@ -1,0 +1,14 @@
+{
+  "runId": 5,
+  "triggeredBy": "portal",
+  "startedAt": "2025-10-13T12:17:11.804Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/students.spec.ts",
+  "captureArtifacts": true,
+  "steps": [
+    "[\"login\", \"navigate\", \"assert\"]"
+  ],
+  "finishedAt": "2025-10-13T12:17:11.828Z",
+  "status": "failed",
+  "error": "spawn EINVAL"
+}

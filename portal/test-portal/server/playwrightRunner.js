@@ -123,35 +123,76 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
     const jsonReportPath = path.join(artifactDir, 'report.json');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-    const out = fs.createWriteStream(stdoutPath);
-    const err = fs.createWriteStream(stderrPath);
+  const out = fs.createWriteStream(stdoutPath);
+  const err = fs.createWriteStream(stderrPath);
 
-    // Build arguments
-    const args = [
+    // Build arguments for Playwright
+    const entryRaw = testCase.entry_point ?? testCase.entryPoint;
+    // Normalize entry to be relative to the Playwright project directory
+    let entry = entryRaw;
+    if (entry) {
+      const norm = String(entry).replace(/\\/g, '/');
+      if (norm.startsWith('frontend/teks-mvp/')) {
+        entry = norm.substring('frontend/teks-mvp/'.length);
+      } else {
+        entry = norm;
+      }
+    }
+    const pwArgs = [
       'test',
       '-c', 'playwright.config.ts',
-      testCase.entry_point ?? testCase.entryPoint,
+      entry,
       '--reporter', 'json',
       '--trace', 'on'
     ].filter(Boolean);
 
     // Environment variables
-    const env = {
+    const rawEnv = {
       ...process.env,
       // Base URL for UI
       PLAYWRIGHT_BASE_URL: environment.base_url ?? environment.baseUrl ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4200',
       // Backend API base for test seed utils
       TEST_API_BASE: process.env.TEST_API_BASE ?? 'https://localhost:7140',
+      // Optional: provide an auth token directly to tests (used by login helper)
+      E2E_AUTH_TOKEN: environment.auth_token ?? environment.authToken ?? process.env.E2E_AUTH_TOKEN,
       // Always collect trace & screenshots for recordability
       PWTRACE: 'on',
     };
+    // Remove undefined/null values (Windows spawn will fail with EINVAL for invalid env)
+    const env = Object.fromEntries(
+      Object.entries(rawEnv).filter(([_, v]) => v !== undefined && v !== null)
+    );
 
-    // Spawn Playwright via npx for portability
-    const child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['playwright', ...args], {
-      cwd: frontendDir,
-      env,
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    // Prefer executing via Node using the Playwright CLI JS (most robust on Windows)
+    const cliJs = path.join(frontendDir, 'node_modules', '@playwright', 'test', 'cli.js');
+    const localCli = path.join(frontendDir, 'node_modules', '.bin', process.platform === 'win32' ? 'playwright.cmd' : 'playwright');
+
+    let cmd;
+    let cmdArgs;
+  let spawnOpts = { cwd: frontendDir, env, stdio: ['ignore', 'pipe', 'pipe'], shell: process.platform === 'win32' };
+
+    if (process.platform === 'win32') {
+      // Use npm script for reliability on Windows
+      cmd = 'cmd.exe';
+      const extra = [entry, '--reporter', 'json', '--trace', 'on'].filter(Boolean);
+      cmdArgs = ['/c', 'npm', 'run', 'test:e2e', '--', ...extra];
+    } else if (fs.existsSync(cliJs)) {
+      cmd = process.execPath || 'node';
+      cmdArgs = [cliJs, ...pwArgs];
+    } else if (fs.existsSync(localCli)) {
+      cmd = localCli;
+      cmdArgs = pwArgs;
+    } else {
+      cmd = 'npx';
+      cmdArgs = ['playwright', ...pwArgs];
+    }
+
+    // Note: writing chosen command for diagnostics
+    try {
+      fs.appendFileSync(stdoutPath, `\n[runner] cmd: ${cmd}\n[runner] args: ${JSON.stringify(cmdArgs)}\n`);
+    } catch {}
+
+  const child = spawn(cmd, cmdArgs, spawnOpts);
 
     let jsonBuffer = '';
     let report = null;
@@ -162,8 +203,8 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
     child.stderr.on('data', (chunk) => err.write(chunk));
 
     child.on('error', (e) => {
-      try { out.end(); } catch {}
-      try { err.end(); } catch {}
+  try { out.end(); } catch {}
+  try { err.end(); } catch {}
       reject(e);
     });
 
@@ -183,8 +224,17 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
           report = JSON.parse(jsonText);
           const total = report?.stats?.tests ?? countTests(report?.suites ?? []);
           const failures = report?.stats?.failures ?? 0;
-          status = failures > 0 ? 'failed' : status;
-          summary = `Tests: ${total ?? 'n/a'}, Failures: ${failures}`;
+          const skipped = report?.stats?.skipped ?? 0;
+          if (failures > 0) {
+            status = 'failed';
+          } else if (total > 0 && skipped === total) {
+            status = 'skipped';
+          } else if (!total || total === 0) {
+            // No tests were discovered — most likely an invalid entry path
+            status = 'failed';
+            summary = `No tests found for entry '${entryRaw}'. Check the test case entryPoint path.`;
+          }
+          summary = `Tests: ${total ?? 'n/a'}, Failures: ${failures}, Skipped: ${skipped ?? 0}`;
         }
       } catch (e) {
         // Leave default summary on parse failure

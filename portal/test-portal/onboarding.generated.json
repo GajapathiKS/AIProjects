@@ -1,0 +1,186 @@
+{
+  "environments": [
+    {
+      "name": "Local",
+      "type": "web",
+      "baseUrl": "http://localhost:4200",
+      "notes": "Auto-discovered"
+    }
+  ],
+  "testCases": [
+    {
+      "title": "Assignments",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/assignments.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Goals Create",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/goals-create.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Goals",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/goals.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Needs",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/needs.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Progress",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/progress.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Students",
+      "feature": "E2E",
+      "type": "playwright",
+      "playwrightMode": "traditional",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/students.spec.ts",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "e2e"
+      ]
+    },
+    {
+      "title": "Dashboard Overview",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/dashboard-overview.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/dashboard-overview.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    },
+    {
+      "title": "Goals Navigation",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/goals-navigation.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/goals-navigation.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    },
+    {
+      "title": "Student Assignments Overview",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/student-assignments-overview.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-assignments-overview.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    },
+    {
+      "title": "Student Needs Overview",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/student-needs-overview.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-needs-overview.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    },
+    {
+      "title": "Student Progress Overview",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/student-progress-overview.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-progress-overview.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    },
+    {
+      "title": "Students Overview",
+      "feature": "MCP",
+      "type": "playwright",
+      "playwrightMode": "mcp",
+      "environment": "Local",
+      "entryPoint": "frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml",
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": [
+        "auto",
+        "mcp"
+      ]
+    }
+  ]
+}

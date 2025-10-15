@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Student needs overview (MCP)",
+    "description": "Confirm educators can access the needs assessment workspace for a student and\nview the creation controls for capturing new interventions.\n",
+    "tags": [
+      "regression",
+      "needs"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 15000
+  },
+  "steps": [
+    {
+      "action": "screenshot",
+      "status": "failed",
+      "detail": "Not connected"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\student-needs-overview.mcp.yaml"
+}

@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "title": "Login via UI",
+    "description": "Sign in using staff credentials and confirm landing on the dashboard with nav links.\n",
+    "tags": [
+      "auth",
+      "smoke"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 45000
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "status": "failed",
+      "detail": "Condition not met before timeout"
+    },
+    {
+      "action": "screenshot",
+      "status": "passed",
+      "detail": "Captured screenshot 1760538868339-failure.png"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: Condition not met before timeout",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\login.mcp.yaml"
+}
