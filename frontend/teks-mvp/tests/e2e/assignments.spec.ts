@@ -1,4 +1,4 @@
-import { test, expect, request } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { login } from './auth.util';
 import { createStudent, initApi } from './seed.util';
 
@@ -7,12 +7,10 @@ import { createStudent, initApi } from './seed.util';
 test('create new assignment shows in detail', async ({ page }) => {
   await login(page);
   const api = await initApi();
-  const studentId = await createStudent(api);
+  const student = await createStudent(api);
   await api.dispose();
 
-  await page.goto(`/students`);
-  // Open that student (look for Open matching the seeded LocalId is tricky; navigate directly)
-  await page.goto(`/students/${studentId}`);
+  await page.goto(`/students/${student.id}`);
 
   // Go to assignments
   await page.getByRole('link', { name: 'Assignments' }).click();
@@ -30,7 +28,7 @@ test('create new assignment shows in detail', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
 
   // After create, we navigate back to the student's assignments list
-  await expect(page).toHaveURL(new RegExp(`/students/${studentId}/assignments$`));
+  await expect(page).toHaveURL(new RegExp(`/students/${student.id}/assignments$`));
 
   // Verify row appears in the list
   const titleCell = page.getByRole('cell', { name: title });

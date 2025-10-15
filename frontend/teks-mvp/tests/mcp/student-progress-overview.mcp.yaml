@@ -1,0 +1,48 @@
+metadata:
+  title: Student progress overview (MCP)
+  description: |
+    Review the progress tab for the first student after authentication to ensure
+    the new progress entry affordances are available for educators.
+  tags:
+    - regression
+    - progress
+config:
+  browser: chromium
+  headless: true
+  baseUrl: "{{environment.baseUrl}}"
+steps:
+  - navigate: "{{config.baseUrl}}/login"
+  - fill:
+      selector: 'input[formcontrolname="username"]'
+      value: '{{secrets.username}}'
+  - fill:
+      selector: 'input[formcontrolname="password"]'
+      value: '{{secrets.password}}'
+  - click:
+      selector: 'button[type="submit"]'
+  - waitFor:
+      selector: 'table.table tbody tr a.btn'
+  - evaluate:
+      script: |
+        () => {
+          const firstLink = document.querySelector('table.table tbody tr a.btn');
+          if (!firstLink) {
+            throw new Error('No student rows available to open');
+          }
+          firstLink.click();
+          return true;
+        }
+  - waitFor:
+      selector: '.sidebar a.active'
+      text: 'Info'
+  - clickText:
+      selector: '.sidebar a'
+      text: 'Progress'
+  - waitFor:
+      selector: 'h2'
+      text: 'Progress Updates'
+  - expectVisible:
+      selector: 'button.btn.primary'
+      text: '+ New Progress'
+  - screenshot:
+      name: 'student-progress-overview'

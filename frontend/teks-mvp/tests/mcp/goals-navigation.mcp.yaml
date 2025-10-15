@@ -1,0 +1,46 @@
+metadata:
+  title: Student goals navigation (MCP)
+  description: |
+    Authenticate as an administrator, open the first student record, and inspect
+    the goals table to capture a snapshot for review.
+  tags:
+    - regression
+    - goals
+config:
+  browser: chromium
+  headless: true
+  baseUrl: "{{environment.baseUrl}}"
+steps:
+  - navigate: "{{config.baseUrl}}/login"
+  - fill:
+      selector: 'input[formcontrolname="username"]'
+      value: '{{secrets.username}}'
+  - fill:
+      selector: 'input[formcontrolname="password"]'
+      value: '{{secrets.password}}'
+  - click:
+      selector: 'button[type="submit"]'
+  - waitFor:
+      selector: 'nav a.active'
+      text: 'Dashboard'
+  - evaluate:
+      script: |
+        () => {
+          const firstLink = document.querySelector('table.table tbody tr a.btn');
+          if (!firstLink) {
+            throw new Error('No student rows available to open');
+          }
+          firstLink.click();
+          return true;
+        }
+  - waitFor:
+      selector: '.sidebar a.active'
+      text: 'Info'
+  - clickText:
+      selector: '.sidebar a'
+      text: 'Goals'
+  - waitFor:
+      selector: 'h2'
+      text: 'Goals'
+  - screenshot:
+      name: 'student-goals-list'

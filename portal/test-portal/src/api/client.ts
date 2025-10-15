@@ -1,25 +1,26 @@
 export interface EnvironmentConfig {
   id: number;
   name: string;
-  type: 'Dev' | 'QA' | 'Prod' | string;
+  type: string;
   baseUrl: string;
-  authType: 'none' | 'token' | 'basic' | string;
-  authToken?: string;
-  username?: string;
-  password?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export type PlaywrightMode = 'traditional' | 'mcp' | string;
 
 export interface TestCase {
   id: number;
   title: string;
   description: string;
   feature: string;
-  type: 'ui' | 'api' | 'e2e' | string;
+  type: string;
+  playwrightMode: PlaywrightMode;
   environmentId: number;
   entryPoint: string;
+  mcpSource?: string | null;
+  mcpConfig?: Record<string, unknown> | null;
   steps: string[];
   schedule: 'manual' | 'hourly' | 'nightly';
   captureArtifacts: boolean;
@@ -39,6 +40,13 @@ export interface TestRun {
   finishedAt?: string;
   log?: string;
   artifactPath?: string;
+  screenshots: {
+    title: string;
+    project?: string;
+    status?: string;
+    fileName: string;
+    relativePath: string;
+  }[];
 }
 
 const apiBase = '/api';
