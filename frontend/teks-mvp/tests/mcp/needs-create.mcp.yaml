@@ -2,14 +2,14 @@ name: Needs assessment creation (MCP)
 description: Creates a student via API, submits a needs assessment, and validates the record.
 config:
   baseUrl: http://localhost:4200
-  apiBaseUrl: http://localhost:5140
+  apiBaseUrl: https://localhost:7140
   timeout: 30000
   allowInsecureApiTls: true
   servers:
     - name: special-programs-api
-      command: dotnet run --urls http://localhost:5140
+      command: dotnet run --urls https://localhost:7140
       cwd: '{{ runtime.backendApiRoot }}'
-      url: http://localhost:5140/swagger/index.html
+      url: https://localhost:7140/swagger/index.html
       waitTimeout: 240000
       retryInterval: 2000
     - name: angular-app

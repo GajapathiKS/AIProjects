@@ -9,7 +9,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState({
     name: '',
     type: 'Dev',
-    baseUrl: 'http://localhost:5140',
+    baseUrl: 'https://localhost:7140',
     notes: ''
   });
   const [saving, setSaving] = useState(false);

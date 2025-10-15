@@ -24,14 +24,14 @@ This folder hosts tooling and documentation for running human-readable Playwrigh
    ```yaml
    config:
      baseUrl: http://localhost:4200
-     apiBaseUrl: http://localhost:5140
+     apiBaseUrl: https://localhost:7140
      timeout: 20000
      allowInsecureApiTls: true # sets NODE_TLS_REJECT_UNAUTHORIZED=0 for local dev certs
      servers:
        - name: api
-         command: dotnet run --urls http://localhost:5140
+         command: dotnet run --urls https://localhost:7140
          cwd: '{{ runtime.backendApiRoot }}'
-         url: http://localhost:5140/swagger/index.html
+         url: https://localhost:7140/swagger/index.html
          waitTimeout: 240000
          retryInterval: 2000
        - name: portal
