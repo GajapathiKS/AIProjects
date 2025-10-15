@@ -1,0 +1,101 @@
+name: Needs assessment creation (MCP)
+description: Creates a student via API, submits a needs assessment, and validates the record.
+config:
+  baseUrl: http://localhost:4200
+  apiBaseUrl: http://localhost:5140
+  timeout: 30000
+  allowInsecureApiTls: true
+  servers:
+    - name: special-programs-api
+      command: dotnet run --urls http://localhost:5140
+      cwd: '{{ runtime.backendApiRoot }}'
+      url: http://localhost:5140/swagger/index.html
+      waitTimeout: 240000
+      retryInterval: 2000
+    - name: angular-app
+      command: npx ng serve --port 4200 --host 0.0.0.0
+      cwd: '{{ runtime.projectRoot }}'
+      url: http://localhost:4200
+      waitTimeout: 180000
+      retryInterval: 1000
+steps:
+  - set:
+      stamp: "{{ runtime.runId }}"
+  - apiAuth:
+      saveAs: apiToken
+  - apiRequest:
+      method: POST
+      url: api/students
+      saveAs: newStudent
+      body:
+        firstName: "mcp_{{ vars.stamp }}_First"
+        lastName: "mcp_{{ vars.stamp }}_Last"
+        dateOfBirth: '2012-01-15'
+        gradeLevel: '5'
+        campus: "mcp_{{ vars.stamp }}_Campus"
+        guardianContact: "mcp_{{ vars.stamp }}_Guardian"
+        programFocus: "mcp_{{ vars.stamp }}_Focus"
+        localId: "mcp_{{ vars.stamp }}"
+        enrollmentDate: '2024-09-01'
+  - navigate:
+      url: /login
+  - fill:
+      target:
+        selector: 'input[formcontrolname="username"]'
+      value: '{{ secrets.username }}'
+  - fill:
+      target:
+        selector: 'input[formcontrolname="password"]'
+      value: '{{ secrets.password }}'
+  - click:
+      target:
+        role: button
+        name: 'Sign in'
+  - waitFor:
+      target:
+        role: heading
+        name: 'Dashboard'
+      timeout: 30000
+  - navigate:
+      url: '/students/{{ vars.newStudent.id }}/needs'
+  - waitFor:
+      target:
+        text: 'Needs Assessments'
+  - click:
+      target:
+        role: link
+        name: '+ New Needs Assessment'
+  - waitFor:
+      target:
+        role: heading
+        name: 'New Needs Assessment'
+      timeout: 20000
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="academicNeeds"]'
+      value: 'support reading {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="supportServices"]'
+      value: 'tutoring {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="instructionalStrategies"]'
+      value: 'small group {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="assessmentTools"]'
+      value: 'map {{ vars.stamp }}'
+  - click:
+      target:
+        role: button
+        name: 'Create'
+  - waitFor:
+      target:
+        text: 'Needs assessment added.'
+  - expectText:
+      target:
+        selector: 'table.table tbody'
+      contains: '{{ vars.stamp }}'
+  - screenshot:
+      name: 'needs-create-confirmation'

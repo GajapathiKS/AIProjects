@@ -7,11 +7,11 @@ import { createStudent, initApi } from './seed.util';
 test('add needs assessment appears in list', async ({ page }) => {
   await login(page);
   const api = await initApi();
-  const studentId = await createStudent(api);
+  const student = await createStudent(api);
   await api.dispose();
 
-  await page.goto(`/students/${studentId}/needs`);
-  await expect(page).toHaveURL(new RegExp(`/students/${studentId}/needs$`));
+  await page.goto(`/students/${student.id}/needs`);
+  await expect(page).toHaveURL(new RegExp(`/students/${student.id}/needs$`));
 
   // Open New Needs Assessment page
   await page.getByRole('link', { name: '+ New Needs Assessment' }).click();
@@ -26,6 +26,6 @@ test('add needs assessment appears in list', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
 
   // Verify appears in table by unique stamp in any of the cells
-  const cell = page.getByRole('cell', { name: String(stamp) });
+  const cell = page.getByRole('cell', { name: new RegExp(String(stamp)) });
   await expect(cell.first()).toBeVisible({ timeout: 10000 });
 });

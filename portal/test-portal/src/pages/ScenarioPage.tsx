@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { ApiClient, EnvironmentConfig, TestCase } from '../api/client';
+import { ApiClient, EnvironmentConfig, PlaywrightMode, TestCase } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 
 const schedules = [
@@ -14,25 +14,38 @@ const caseTypes = [
   { label: 'End-to-end', value: 'e2e' }
 ];
 
+const modeOptions: { label: string; value: PlaywrightMode; description: string }[] = [
+  {
+    label: 'Traditional (.spec.ts)',
+    value: 'traditional',
+    description: 'Execute compiled Playwright projects with TypeScript test suites.'
+  },
+  {
+    label: 'MCP Scenario (YAML)',
+    value: 'mcp',
+    description: 'Drive the Playwright MCP client with human-readable scenario files.'
+  }
+];
+
 export default function ScenarioPage() {
   const envs = useAsync(ApiClient.listEnvironments, []);
   const testCases = useAsync(ApiClient.listTestCases, []);
-  const runs = useAsync(() => ApiClient.listRuns(), []);
 
   const [form, setForm] = useState({
     title: '',
     description: '',
     feature: '',
     type: 'ui',
+    playwrightMode: 'traditional' as PlaywrightMode,
     environmentId: 0,
-    entryPoint: 'tests/',
-    stepsText: 'Login\nNavigate to dashboard\nCapture screenshot',
+    entryPoint: 'frontend/teks-mvp/tests/e2e/students.spec.ts',
+    mcpSource: 'frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml',
+    stepsText: 'Login\nOpen students\nCapture screenshot',
     schedule: 'manual',
     captureArtifacts: true,
     tags: 'smoke, onboarding'
   });
   const [saving, setSaving] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<number | null>(null);
 
   const environmentLookup = useMemo(() => {
     const map = new Map<number, EnvironmentConfig>();
@@ -40,65 +53,62 @@ export default function ScenarioPage() {
     return map;
   }, [envs.value]);
 
-  const caseRuns = useMemo(() => {
-    return (runs.value ?? []).filter(run => run.testCaseId === selectedCase);
-  }, [runs.value, selectedCase]);
-
   const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
     if (!form.title || !form.environmentId) return;
+    if (form.playwrightMode === 'mcp' && !form.mcpSource.trim()) {
+      alert('Provide a scenario file path for MCP test cases.');
+      return;
+    }
     setSaving(true);
+    const steps = form.stepsText.split('\n').map(step => step.trim()).filter(Boolean);
     const payload = {
       title: form.title,
       description: form.description,
       feature: form.feature,
       type: form.type,
+      playwrightMode: form.playwrightMode,
       environmentId: form.environmentId,
-      entryPoint: form.entryPoint,
-      steps: form.stepsText.split('\n').map(step => step.trim()).filter(Boolean),
+      entryPoint: form.playwrightMode === 'mcp' && form.mcpSource ? form.mcpSource : form.entryPoint,
+      mcpSource: form.playwrightMode === 'mcp' ? form.mcpSource : undefined,
+      steps,
       schedule: form.schedule as TestCase['schedule'],
       captureArtifacts: form.captureArtifacts,
       tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-    } satisfies Omit<TestCase, 'id' | 'createdAt' | 'updatedAt' | 'lastRunAt' | 'lastStatus'>;
+    } satisfies Omit<TestCase, 'id' | 'createdAt' | 'updatedAt' | 'lastRunAt' | 'lastStatus' | 'mcpConfig'>;
 
     ApiClient.createTestCase(payload)
       .then(() => {
-        setForm({
+        setForm(prev => ({
           title: '',
           description: '',
           feature: '',
-          type: 'ui',
+          type: prev.type,
+          playwrightMode: prev.playwrightMode,
           environmentId: 0,
-          entryPoint: 'tests/',
+          entryPoint: 'frontend/teks-mvp/tests/e2e/students.spec.ts',
+          mcpSource: 'frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml',
           stepsText: '',
           schedule: 'manual',
           captureArtifacts: true,
           tags: ''
-        });
+        }));
         testCases.refresh();
       })
       .finally(() => setSaving(false));
   };
 
   const trigger = (testCase: TestCase) => {
-    setSelectedCase(testCase.id);
-    ApiClient.triggerTestCase(testCase.id, 'portal')
-      .then(() => {
-        runs.refresh();
-        testCases.refresh();
-      });
+    ApiClient.triggerTestCase(testCase.id, 'portal').then(() => {
+      testCases.refresh();
+    });
   };
 
   const deleteCase = (testCase: TestCase) => {
     if (!confirm(`Delete ${testCase.title}?`)) return;
-    ApiClient.deleteTestCase(testCase.id)
-      .then(() => {
-        if (selectedCase === testCase.id) {
-          setSelectedCase(null);
-        }
-        testCases.refresh();
-        runs.refresh();
-      });
+    ApiClient.deleteTestCase(testCase.id).then(() => {
+      testCases.refresh();
+    });
   };
 
   return (
@@ -142,7 +152,7 @@ export default function ScenarioPage() {
             </select>
           </label>
           <label>
-            Case Type
+            Classification
             <select
               value={form.type}
               onChange={e => setForm({ ...form, type: e.target.value })}
@@ -153,15 +163,41 @@ export default function ScenarioPage() {
             </select>
           </label>
           <label>
-            Entry Point
-            <input value={form.entryPoint} onChange={e => setForm({ ...form, entryPoint: e.target.value })} />
+            Playwright Mode
+            <select
+              value={form.playwrightMode}
+              onChange={e => {
+                const next = e.target.value as PlaywrightMode;
+                setForm(prev => ({
+                  ...prev,
+                  playwrightMode: next
+                }));
+              }}
+            >
+              {modeOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <small>{modeOptions.find(option => option.value === form.playwrightMode)?.description}</small>
           </label>
+          {form.playwrightMode === 'traditional' ? (
+            <label>
+              Entry Point (.spec.ts)
+              <input value={form.entryPoint} onChange={e => setForm({ ...form, entryPoint: e.target.value })} />
+            </label>
+          ) : (
+            <label>
+              MCP Scenario File
+              <input value={form.mcpSource} onChange={e => setForm({ ...form, mcpSource: e.target.value })} />
+            </label>
+          )}
           <label>
-            Steps (one per line)
+            Notes / Steps (one per line)
             <textarea
               value={form.stepsText}
               onChange={e => setForm({ ...form, stepsText: e.target.value })}
               rows={5}
+              placeholder={form.playwrightMode === 'mcp' ? 'Document the expectations for the scenario…' : 'Login\nNavigate to dashboard\nCapture screenshot'}
             />
           </label>
           <label>
@@ -196,6 +232,8 @@ export default function ScenarioPage() {
               <tr>
                 <th>Title</th>
                 <th>Feature</th>
+                <th>Mode</th>
+                <th>Entry</th>
                 <th>Environment</th>
                 <th>Schedule</th>
                 <th>Last Run</th>
@@ -205,16 +243,19 @@ export default function ScenarioPage() {
             </thead>
             <tbody>
               {(testCases.value ?? []).map(tc => (
-                <tr key={tc.id} className={selectedCase === tc.id ? 'selected' : ''}>
+                <tr key={tc.id}>
                   <td>{tc.title}</td>
                   <td>{tc.feature}</td>
+                  <td><span className="chip">{tc.playwrightMode}</span></td>
+                  <td>
+                    <code className="path">{tc.playwrightMode === 'mcp' ? tc.mcpSource ?? tc.entryPoint : tc.entryPoint}</code>
+                  </td>
                   <td>{environmentLookup.get(tc.environmentId)?.name ?? '—'}</td>
                   <td>{tc.schedule}</td>
                   <td>{tc.lastRunAt ? new Date(tc.lastRunAt).toLocaleString() : 'Never'}</td>
                   <td><span className={`status ${tc.lastStatus ?? 'pending'}`}>{tc.lastStatus ?? 'pending'}</span></td>
                   <td>
                     <button type="button" onClick={() => trigger(tc)}>Run</button>
-                    <button type="button" onClick={() => { setSelectedCase(tc.id); runs.refresh(); }}>View Runs</button>
                     <button type="button" className="danger" onClick={() => deleteCase(tc)}>Delete</button>
                   </td>
                 </tr>
@@ -222,40 +263,6 @@ export default function ScenarioPage() {
             </tbody>
           </table>
         </div>
-
-        {selectedCase && (
-          <div className="panel">
-            <h3>Run History for #{selectedCase}</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Status</th>
-                  <th>Triggered</th>
-                  <th>Started</th>
-                  <th>Finished</th>
-                  <th>Artifacts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {caseRuns.length ? caseRuns.map(run => (
-                  <tr key={run.id}>
-                    <td>{run.id}</td>
-                    <td><span className={`status ${run.status}`}>{run.status}</span></td>
-                    <td>{run.triggeredBy}</td>
-                    <td>{new Date(run.startedAt).toLocaleString()}</td>
-                    <td>{run.finishedAt ? new Date(run.finishedAt).toLocaleString() : '—'}</td>
-                    <td>{run.artifactPath ? <code>{run.artifactPath}</code> : 'pending'}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={6}>No runs yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
     </div>
   );

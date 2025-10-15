@@ -1,289 +1,259 @@
 import express from 'express';
-import Database from 'better-sqlite3';
-import path from 'node:path';
-import fs from 'node:fs';
-import { runPlaywright } from './playwrightRunner.js';
-
-const dataDir = path.join(process.cwd(), 'data');
-const artifactDir = path.join(dataDir, 'artifacts');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-if (!fs.existsSync(artifactDir)) {
-  fs.mkdirSync(artifactDir, { recursive: true });
-}
-
-const db = new Database(path.join(dataDir, 'portal.sqlite'));
-
-db.exec(`
-  PRAGMA foreign_keys = ON;
-  CREATE TABLE IF NOT EXISTS environments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    type TEXT NOT NULL,
-    base_url TEXT NOT NULL,
-    auth_type TEXT NOT NULL DEFAULT 'none',
-    auth_token TEXT,
-    username TEXT,
-    password TEXT,
-    notes TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS test_cases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    feature TEXT,
-    type TEXT NOT NULL,
-    environment_id INTEGER NOT NULL,
-    entry_point TEXT NOT NULL,
-    steps TEXT NOT NULL,
-    schedule TEXT NOT NULL DEFAULT 'manual',
-    capture_artifacts INTEGER NOT NULL DEFAULT 1,
-    tags TEXT,
-    last_run_at TEXT,
-    last_status TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY(environment_id) REFERENCES environments(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS test_runs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_case_id INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    triggered_by TEXT NOT NULL,
-    started_at TEXT NOT NULL,
-    finished_at TEXT,
-    log TEXT,
-    artifact_path TEXT,
-    FOREIGN KEY(test_case_id) REFERENCES test_cases(id)
-  );
-`);
+import {
+  createEnvironment,
+  createTestCase,
+  deleteTestCase,
+  getMetrics,
+  getTestCaseRow,
+  listEnvironments,
+  listRuns,
+  listTestCases,
+  updateEnvironment,
+  updateTestCase
+} from './storage.js';
+import { enqueueRun, scheduleEligibleRuns } from './runManager.js';
+import { applyOnboardingConfig, loadOnboardingConfig } from './onboarding.js';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
-function mapEnvironment(row) {
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeOptionalString(value) {
+  const normalized = normalizeString(value);
+  return normalized ? normalized : undefined;
+}
+
+function parseBoolean(value, fallback = false) {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  const truthy = ['true', '1', 'yes', 'on'];
+  return truthy.includes(String(value).toLowerCase());
+}
+
+function parseSchedule(value) {
+  const normalized = normalizeString(value).toLowerCase();
+  return ['manual', 'hourly', 'nightly'].includes(normalized) ? normalized : 'manual';
+}
+
+function parsePlaywrightMode(value) {
+  const normalized = normalizeString(value).toLowerCase();
+  return normalized === 'mcp' ? 'mcp' : 'traditional';
+}
+
+function parseStringArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.map(item => normalizeString(item)).filter(Boolean);
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(/\r?\n|,/)
+      .map(part => part.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function parseSteps(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.map(item => normalizeString(item)).filter(Boolean);
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(/\r?\n/)
+      .map(step => step.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function sanitizeEnvironmentPayload(body = {}) {
+  const errors = [];
+  const name = normalizeString(body.name);
+  const type = normalizeString(body.type) || 'web';
+  const baseUrl = normalizeString(body.baseUrl ?? body.base_url ?? body.url);
+  const notes = normalizeOptionalString(body.notes ?? body.description);
+
+  if (!name) {
+    errors.push('Environment name is required.');
+  }
+  if (!baseUrl) {
+    errors.push('Environment baseUrl is required.');
+  }
+
   return {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    baseUrl: row.base_url,
-    authType: row.auth_type,
-    authToken: row.auth_token ?? undefined,
-    username: row.username ?? undefined,
-    password: row.password ?? undefined,
-    notes: row.notes ?? undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
+    valid: errors.length === 0,
+    errors,
+    payload: { name, type, baseUrl, notes }
   };
 }
 
-function mapTestCase(row) {
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description ?? '',
-    feature: row.feature ?? '',
-    type: row.type,
-    environmentId: row.environment_id,
-    entryPoint: row.entry_point,
-    steps: JSON.parse(row.steps),
-    schedule: row.schedule,
-    captureArtifacts: !!row.capture_artifacts,
-    tags: row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-    lastRunAt: row.last_run_at ?? undefined,
-    lastStatus: row.last_status ?? undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  };
-}
-
-function mapRun(row) {
-  return {
-    id: row.id,
-    testCaseId: row.test_case_id,
-    status: row.status,
-    triggeredBy: row.triggered_by,
-    startedAt: row.started_at,
-    finishedAt: row.finished_at ?? undefined,
-    log: row.log ?? undefined,
-    artifactPath: row.artifact_path ?? undefined
-  };
-}
-
-async function enqueueRun(testCase, triggeredBy = 'manual') {
-  const start = new Date().toISOString();
-  const insert = db.prepare(`
-    INSERT INTO test_runs (test_case_id, status, triggered_by, started_at)
-    VALUES (?, 'running', ?, ?)
-  `);
-  const info = insert.run(testCase.id, triggeredBy, start);
-  const runId = info.lastInsertRowid;
-
-  db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
-    .run(start, 'running', testCase.id);
-
-  const runFolder = path.join(artifactDir, `run-${runId}`);
-  fs.mkdirSync(runFolder, { recursive: true });
-
-  const metadata = {
-    runId,
-    triggeredBy,
-    startedAt: start,
-    environmentId: testCase.environment_id ?? testCase.environmentId,
-    entryPoint: testCase.entry_point ?? testCase.entryPoint,
-    captureArtifacts: !!testCase.capture_artifacts || !!testCase.captureArtifacts,
-    steps: Array.isArray(testCase.steps) ? testCase.steps : JSON.parse(testCase.steps)
-  };
-
-  fs.writeFileSync(path.join(runFolder, 'metadata.json'), JSON.stringify(metadata, null, 2));
-
-  // Trigger Playwright run asynchronously
-  (async () => {
+function parseMcpConfig(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') {
+    return raw;
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
     try {
-      // Resolve environment row
-      const env = db.prepare('SELECT * FROM environments WHERE id = ?').get(metadata.environmentId);
-      const result = await runPlaywright({
-        runId,
-        testCase,
-        environment: env,
-        artifactDir: runFolder
-      });
-
-      const finish = new Date().toISOString();
-      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
-      const log = `Run ${runId} ${result.status}. ${result.summary}`;
-      db.prepare('UPDATE test_runs SET status = ?, finished_at = ?, log = ?, artifact_path = ? WHERE id = ?')
-        .run(result.status, finish, log, artifactPath, runId);
-      db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
-        .run(finish, result.status, testCase.id);
-    } catch (e) {
-      const finish = new Date().toISOString();
-      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
-      const log = `Run ${runId} failed to start: ${e?.message ?? e}`;
-      db.prepare('UPDATE test_runs SET status = ?, finished_at = ?, log = ?, artifact_path = ? WHERE id = ?')
-        .run('failed', finish, log, artifactPath, runId);
-      db.prepare('UPDATE test_cases SET last_run_at = ?, last_status = ? WHERE id = ?')
-        .run(finish, 'failed', testCase.id);
+      return JSON.parse(trimmed);
+    } catch (error) {
+      throw new Error(`Unable to parse mcpConfig: ${error.message}`);
     }
-  })();
-
-  return mapRun({
-    id: runId,
-    test_case_id: testCase.id,
-    status: 'running',
-    triggered_by: triggeredBy,
-    started_at: start,
-    finished_at: null,
-    log: null,
-    artifact_path: null
-  });
+  }
+  return null;
 }
 
-function scheduleEligibleRuns() {
-  const now = new Date();
-  const cases = db.prepare('SELECT * FROM test_cases').all();
-  cases.forEach(tc => {
-    if (tc.schedule === 'manual') return;
-    const lastRun = tc.last_run_at ? new Date(tc.last_run_at) : undefined;
-    if (tc.schedule === 'hourly') {
-      if (!lastRun || now.getTime() - lastRun.getTime() > 60 * 60 * 1000) {
-        enqueueRun(tc, 'scheduler');
-      }
-    } else if (tc.schedule === 'nightly') {
-      if (!lastRun || now.toDateString() !== lastRun.toDateString()) {
-        enqueueRun(tc, 'scheduler');
-      }
-    }
-  });
-}
+function sanitizeTestCasePayload(body = {}) {
+  const errors = [];
+  const title = normalizeString(body.title);
+  const description = normalizeOptionalString(body.description) ?? '';
+  const feature = normalizeOptionalString(body.feature) ?? '';
+  const type = normalizeString(body.type) || 'playwright';
+  const playwrightMode = parsePlaywrightMode(body.playwrightMode ?? body.playwright_mode);
+  const environmentId = Number(body.environmentId ?? body.environment_id);
+  const entryPointRaw = normalizeString(body.entryPoint ?? body.entry_point ?? body.mcpSource ?? body.mcp_source);
+  const mcpSourceRaw = normalizeOptionalString(body.mcpSource ?? body.mcp_source);
+  let mcpConfig = null;
 
-setInterval(scheduleEligibleRuns, 60 * 1000);
+  try {
+    mcpConfig = parseMcpConfig(body.mcpConfig ?? body.mcp_config ?? body.config);
+  } catch (error) {
+    errors.push(error.message);
+  }
+
+  if (!title) {
+    errors.push('Test case title is required.');
+  }
+  if (!Number.isFinite(environmentId)) {
+    errors.push('Valid environmentId is required.');
+  }
+
+  const entryPoint = entryPointRaw;
+  const mcpSource = playwrightMode === 'mcp' ? (mcpSourceRaw || entryPointRaw) : mcpSourceRaw || undefined;
+
+  if (!entryPoint) {
+    errors.push('Test case entryPoint is required.');
+  }
+  if (playwrightMode === 'mcp' && !mcpSource) {
+    errors.push('MCP scenarios require an mcpSource path.');
+  }
+
+  const steps = parseSteps(body.steps);
+  const schedule = parseSchedule(body.schedule);
+  const captureArtifacts = parseBoolean(body.captureArtifacts ?? body.capture_artifacts, true);
+  const tags = parseStringArray(body.tags);
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    payload: {
+      title,
+      description,
+      feature,
+      type,
+      playwrightMode,
+      environmentId,
+      entryPoint,
+      mcpSource,
+      mcpConfig,
+      steps,
+      schedule,
+      captureArtifacts,
+      tags
+    }
+  };
+}
 
 app.get('/api/environments', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM environments ORDER BY created_at DESC').all();
-  res.json(rows.map(mapEnvironment));
+  res.json(listEnvironments());
 });
 
 app.post('/api/environments', (req, res) => {
-  const { name, type, baseUrl, authType, authToken, username, password, notes } = req.body;
-  const now = new Date().toISOString();
-  const stmt = db.prepare(`
-    INSERT INTO environments (name, type, base_url, auth_type, auth_token, username, password, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const info = stmt.run(name, type, baseUrl, authType ?? 'none', authToken ?? null, username ?? null, password ?? null, notes ?? null, now, now);
-  const row = db.prepare('SELECT * FROM environments WHERE id = ?').get(info.lastInsertRowid);
-  res.status(201).json(mapEnvironment(row));
+  const { valid, errors, payload } = sanitizeEnvironmentPayload(req.body);
+  if (!valid) {
+    return res.status(400).json({ message: errors.join(' ') });
+  }
+  const env = createEnvironment(payload);
+  res.status(201).json(env);
 });
 
 app.put('/api/environments/:id', (req, res) => {
-  const { id } = req.params;
-  const { name, type, baseUrl, authType, authToken, username, password, notes } = req.body;
-  const now = new Date().toISOString();
-  const stmt = db.prepare(`
-    UPDATE environments
-    SET name = ?, type = ?, base_url = ?, auth_type = ?, auth_token = ?, username = ?, password = ?, notes = ?, updated_at = ?
-    WHERE id = ?
-  `);
-  const result = stmt.run(name, type, baseUrl, authType ?? 'none', authToken ?? null, username ?? null, password ?? null, notes ?? null, now, id);
-  if (result.changes === 0) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ message: 'Invalid environment id' });
+  }
+  const { valid, errors, payload } = sanitizeEnvironmentPayload(req.body);
+  if (!valid) {
+    return res.status(400).json({ message: errors.join(' ') });
+  }
+  const env = updateEnvironment(id, payload);
+  if (!env) {
     return res.sendStatus(404);
   }
-  const row = db.prepare('SELECT * FROM environments WHERE id = ?').get(id);
-  res.json(mapEnvironment(row));
+  res.json(env);
 });
 
 app.get('/api/test-cases', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM test_cases ORDER BY updated_at DESC').all();
-  res.json(rows.map(mapTestCase));
+  res.json(listTestCases());
 });
 
 app.post('/api/test-cases', (req, res) => {
-  const { title, description, feature, type, environmentId, entryPoint, steps, schedule, captureArtifacts, tags } = req.body;
-  const now = new Date().toISOString();
-  const stmt = db.prepare(`
-    INSERT INTO test_cases (title, description, feature, type, environment_id, entry_point, steps, schedule, capture_artifacts, tags, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const info = stmt.run(title, description ?? null, feature ?? null, type, environmentId, entryPoint, JSON.stringify(steps ?? []), schedule ?? 'manual', captureArtifacts ? 1 : 0, Array.isArray(tags) ? tags.join(',') : null, now, now);
-  const row = db.prepare('SELECT * FROM test_cases WHERE id = ?').get(info.lastInsertRowid);
-  res.status(201).json(mapTestCase(row));
+  const { valid, errors, payload } = sanitizeTestCasePayload(req.body);
+  if (!valid) {
+    return res.status(400).json({ message: errors.join(' ') });
+  }
+  try {
+    const testCase = createTestCase(payload);
+    res.status(201).json(testCase);
+  } catch (error) {
+    res.status(400).json({ message: error?.message ?? String(error) });
+  }
 });
 
 app.put('/api/test-cases/:id', (req, res) => {
-  const { id } = req.params;
-  const { title, description, feature, type, environmentId, entryPoint, steps, schedule, captureArtifacts, tags } = req.body;
-  const now = new Date().toISOString();
-  const stmt = db.prepare(`
-    UPDATE test_cases
-    SET title = ?, description = ?, feature = ?, type = ?, environment_id = ?, entry_point = ?, steps = ?, schedule = ?, capture_artifacts = ?, tags = ?, updated_at = ?
-    WHERE id = ?
-  `);
-  const result = stmt.run(title, description ?? null, feature ?? null, type, environmentId, entryPoint, JSON.stringify(steps ?? []), schedule ?? 'manual', captureArtifacts ? 1 : 0, Array.isArray(tags) ? tags.join(',') : null, now, id);
-  if (result.changes === 0) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ message: 'Invalid test case id' });
+  }
+  const { valid, errors, payload } = sanitizeTestCasePayload(req.body);
+  if (!valid) {
+    return res.status(400).json({ message: errors.join(' ') });
+  }
+  const testCase = updateTestCase(id, payload);
+  if (!testCase) {
     return res.sendStatus(404);
   }
-  const row = db.prepare('SELECT * FROM test_cases WHERE id = ?').get(id);
-  res.json(mapTestCase(row));
+  res.json(testCase);
 });
 
 app.delete('/api/test-cases/:id', (req, res) => {
-  const { id } = req.params;
-  const result = db.prepare('DELETE FROM test_cases WHERE id = ?').run(id);
-  if (result.changes === 0) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ message: 'Invalid test case id' });
+  }
+  const deleted = deleteTestCase(id);
+  if (!deleted) {
     return res.sendStatus(404);
   }
   res.sendStatus(204);
 });
 
 app.post('/api/test-cases/:id/run', (req, res) => {
-  const { id } = req.params;
-  const testCase = db.prepare('SELECT * FROM test_cases WHERE id = ?').get(id);
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ message: 'Invalid test case id' });
+  }
+  const testCase = getTestCaseRow(id);
   if (!testCase) {
     return res.sendStatus(404);
   }
@@ -292,25 +262,42 @@ app.post('/api/test-cases/:id/run', (req, res) => {
 });
 
 app.get('/api/test-runs', (req, res) => {
-  const { testCaseId } = req.query;
-  let rows;
-  if (testCaseId) {
-    rows = db.prepare('SELECT * FROM test_runs WHERE test_case_id = ? ORDER BY started_at DESC').all(testCaseId);
-  } else {
-    rows = db.prepare('SELECT * FROM test_runs ORDER BY started_at DESC LIMIT 50').all();
-  }
-  res.json(rows.map(mapRun));
+  const testCaseId = typeof req.query.testCaseId === 'string' ? Number(req.query.testCaseId) : undefined;
+  const runs = listRuns({ testCaseId: Number.isNaN(testCaseId) ? undefined : testCaseId });
+  res.json(runs);
 });
 
 app.get('/api/metrics', (_req, res) => {
-  const totals = {
-    environments: db.prepare('SELECT COUNT(*) as count FROM environments').get().count,
-    testCases: db.prepare('SELECT COUNT(*) as count FROM test_cases').get().count,
-    queuedRuns: db.prepare("SELECT COUNT(*) as count FROM test_runs WHERE status = 'running'").get().count,
-    completedRuns: db.prepare("SELECT COUNT(*) as count FROM test_runs WHERE status = 'passed'").get().count
-  };
-  res.json(totals);
+  res.json(getMetrics());
 });
+
+app.post('/api/onboarding', (req, res) => {
+  try {
+    const { config: inlineConfig, path: configPath, dryRun } = req.body ?? {};
+    let payloadInput = inlineConfig ?? configPath ?? null;
+
+    if (!payloadInput) {
+      const inline = {};
+      if (req.body?.environments) inline.environments = req.body.environments;
+      if (req.body?.testCases) inline.testCases = req.body.testCases;
+      if (Object.keys(inline).length > 0) {
+        payloadInput = inline;
+      }
+    }
+
+    if (!payloadInput) {
+      throw new Error('Provide a config object, JSON string, or path to apply onboarding.');
+    }
+
+    const config = loadOnboardingConfig(payloadInput);
+    const result = applyOnboardingConfig(config, { dryRun: !!dryRun });
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error?.message ?? String(error) });
+  }
+});
+
+setInterval(scheduleEligibleRuns, 60 * 1000);
 
 const port = process.env.PORT ?? 4001;
 app.listen(port, () => {

@@ -1,0 +1,136 @@
+{
+  "environments": [
+    {
+      "name": "Local UI",
+      "type": "web",
+      "baseUrl": "http://localhost:4200",
+      "notes": "Angular dev server started with npm start"
+    },
+    {
+      "name": "Local API",
+      "type": "api",
+      "baseUrl": "https://localhost:7140",
+      "notes": "Special Programs API running via dotnet run"
+    }
+  ],
+  "testCases": [
+    {
+      "title": "Students smoke",
+      "feature": "Students",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "traditional",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/students.spec.ts",
+      "steps": ["Login as educator", "Open students page", "Verify roster"],
+      "schedule": "manual",
+      "tags": ["students", "smoke"]
+    },
+    {
+      "title": "Assignments e2e",
+      "feature": "Assignments",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "traditional",
+      "entryPoint": "frontend/teks-mvp/tests/e2e/assignments.spec.ts",
+      "schedule": "nightly",
+      "tags": ["assignments", "regression"],
+      "captureArtifacts": true
+    },
+    {
+      "title": "Goals overview via MCP",
+      "feature": "Goals",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/goals-navigation.mcp.yaml",
+      "mcpConfig": {
+        "browser": "chromium",
+        "headless": true
+      },
+      "steps": [
+        "Navigate to goals",
+        "Ensure progress indicators render",
+        "Capture goals screenshot"
+      ],
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": ["goals", "mcp"]
+    },
+    {
+      "title": "Dashboard overview via MCP",
+      "feature": "Dashboard",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/dashboard-overview.mcp.yaml",
+      "steps": [
+        "Login as educator",
+        "Validate dashboard navigation",
+        "Capture dashboard screenshot"
+      ],
+      "schedule": "manual",
+      "tags": ["dashboard", "mcp"]
+    },
+    {
+      "title": "Assignments workspace via MCP",
+      "feature": "Assignments",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-assignments-overview.mcp.yaml",
+      "steps": [
+        "Login as educator",
+        "Open first student",
+        "Review assignments tab"
+      ],
+      "schedule": "manual",
+      "tags": ["assignments", "mcp"]
+    },
+    {
+      "title": "Needs assessment access via MCP",
+      "feature": "Needs",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-needs-overview.mcp.yaml",
+      "steps": [
+        "Login as educator",
+        "Open first student",
+        "Review needs tab"
+      ],
+      "schedule": "manual",
+      "tags": ["needs", "mcp"]
+    },
+    {
+      "title": "Progress workspace via MCP",
+      "feature": "Progress",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/student-progress-overview.mcp.yaml",
+      "steps": [
+        "Login as educator",
+        "Open first student",
+        "Review progress tab"
+      ],
+      "schedule": "manual",
+      "tags": ["progress", "mcp"]
+    },
+    {
+      "title": "Needs assessment create via MCP",
+      "feature": "Needs",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/needs-create.mcp.yaml",
+      "steps": [
+        "Seed student via API",
+        "Submit new needs assessment",
+        "Verify assessment is listed"
+      ],
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": ["needs", "create", "mcp"]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+name: Students overview (MCP)
+description: Confirm the students list renders and quick actions are available.
+config:
+  baseUrl: http://localhost:4200
+  timeout: 20000
+steps:
+  - navigate:
+      url: /login
+  - fill:
+      target:
+        selector: 'input[formcontrolname="username"]'
+      value: '{{ secrets.username }}'
+  - fill:
+      target:
+        selector: 'input[formcontrolname="password"]'
+      value: '{{ secrets.password }}'
+  - click:
+      target:
+        role: button
+        name: 'Sign in'
+  - waitFor:
+      target:
+        role: heading
+        name: 'Dashboard'
+  - waitFor:
+      target:
+        selector: 'table.table tbody tr'
+  - expectVisible:
+      target:
+        selector: 'table.table tbody tr a.btn'
+  - screenshot:
+      name: 'students-overview'
