@@ -1,0 +1,14 @@
+{
+  "runId": 10,
+  "triggeredBy": "manual",
+  "startedAt": "2025-10-13T12:31:19.935Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/students.spec.ts",
+  "captureArtifacts": true,
+  "steps": [
+    "[\"login\", \"navigate\", \"assert\"]"
+  ],
+  "finishedAt": "2025-10-13T12:31:19.949Z",
+  "status": "failed",
+  "error": "spawn EINVAL"
+}

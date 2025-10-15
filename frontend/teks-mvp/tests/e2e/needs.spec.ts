@@ -28,4 +28,13 @@ test('add needs assessment appears in list', async ({ page }) => {
   // Verify appears in table by unique stamp in any of the cells
   const cell = page.getByRole('cell', { name: new RegExp(String(stamp)) });
   await expect(cell.first()).toBeVisible({ timeout: 10000 });
+
+  // Proof: log identifiers and attach a full-page screenshot to artifacts
+  // This will show up in the portal run's stdout and screenshots panel
+  // eslint-disable-next-line no-console
+  console.log('e2e-proof: needs created for student', studentId, 'stamp', stamp);
+  await test.info().attach('after-needs-created', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png'
+  });
 });

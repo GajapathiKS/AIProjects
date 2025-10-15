@@ -1,0 +1,149 @@
+{
+  "config": {
+    "configFile": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\playwright.config.ts",
+    "rootDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/MCP_POCS/AIProjects/frontend/teks-mvp/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.0",
+    "workers": 4,
+    "webServer": {
+      "command": "npm start -- --port 4200",
+      "url": "http://localhost:4200",
+      "reuseExistingServer": true,
+      "timeout": 180000,
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "cwd": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp"
+    }
+  },
+  "suites": [
+    {
+      "title": "goals-create.spec.ts",
+      "file": "goals-create.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "create goal and list shows it",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30124,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "message": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\.playwright-artifacts-0\\traces\\3eb439320e664f5cde2f-9b3d328386fad74ff039.trace'"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals-create.spec.ts",
+                        "column": 56,
+                        "line": 14
+                      },
+                      "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: '+ New Goal' })\u001b[22m\n\n\n  12 |\n  13 |   await page.goto(`/students/${studentId}/goals`);\n> 14 |   await page.getByRole('link', { name: '+ New Goal' }).click();\n     |                                                        ^\n  15 |   await expect(page.getByRole('heading', { name: 'New Goal' })).toBeVisible();\n  16 |\n  17 |   const stamp = Date.now();\n    at C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\e2e\\goals-create.spec.ts:14:56"
+                    },
+                    {
+                      "message": "Error: ENOENT: no such file or directory, open 'C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\.playwright-artifacts-0\\de90469edd0f06787128cea9f167e5f0.zip'"
+                    },
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-10-13T13:56:55.742Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-create-create-goal-and-list-shows-it\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\test-results\\goals-create-create-goal-and-list-shows-it\\error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "3eb439320e664f5cde2f-9b3d328386fad74ff039",
+          "file": "goals-create.spec.ts",
+          "line": 7,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-13T13:56:54.720Z",
+    "duration": 61566.166,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

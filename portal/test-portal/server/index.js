@@ -257,7 +257,14 @@ app.post('/api/test-cases/:id/run', (req, res) => {
   if (!testCase) {
     return res.sendStatus(404);
   }
-  const run = enqueueRun(testCase, req.body?.triggeredBy ?? 'manual');
+  const triggeredBy = req.body?.triggeredBy ?? 'manual';
+  const authToken = req.body?.authToken;
+  const environmentOverrides = req.body?.environmentOverrides ?? {};
+  const overrides = { ...environmentOverrides };
+  if (typeof authToken === 'string' && authToken.length > 0) {
+    overrides.authToken = authToken;
+  }
+  const run = enqueueRun(testCase, triggeredBy, overrides);
   res.status(202).json(run);
 });
 
