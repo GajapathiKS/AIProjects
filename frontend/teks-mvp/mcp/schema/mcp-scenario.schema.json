@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Playwright MCP Scenario",
+  "type": "object",
+  "required": ["steps"],
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "baseUrl": { "type": "string" },
+        "baseURL": { "type": "string" },
+        "browser": { "type": "string" },
+        "headless": { "type": ["boolean", "string"] },
+        "timeout": { "type": ["number", "string"] },
+        "waitInterval": { "type": ["number", "string"] },
+        "webServerTimeout": { "type": ["number", "string"] },
+        "ensureBaseUrl": { "type": "string" },
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["command"],
+            "properties": {
+              "name": { "type": "string" },
+              "command": { "type": "string" },
+              "cwd": { "type": "string" },
+              "url": { "type": "string" },
+              "waitTimeout": { "type": ["number", "string"] },
+              "retryInterval": { "type": ["number", "string"] },
+              "env": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "options": { "$ref": "#/properties/config" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/step" }
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "target": {
+      "type": ["string", "object"],
+      "properties": {
+        "selector": { "type": "string" },
+        "css": { "type": "string" },
+        "role": { "type": "string" },
+        "name": { "type": "string" },
+        "testId": { "type": "string" },
+        "text": { "type": "string" },
+        "exact": { "type": ["boolean", "string"] },
+        "nth": { "type": "integer", "minimum": 0 },
+        "within": { "$ref": "#/definitions/target" }
+      },
+      "additionalProperties": true
+    },
+    "step": {
+      "type": "object",
+      "minProperties": 1,
+      "anyOf": [
+        { "required": ["action"] },
+        { "maxProperties": 1 }
+      ],
+      "properties": {
+        "action": { "type": "string" },
+        "description": { "type": "string" },
+        "target": { "$ref": "#/definitions/target" },
+        "within": { "$ref": "#/definitions/target" },
+        "url": { "type": "string" },
+        "value": {},
+        "text": { "type": "string" },
+        "selector": { "type": "string" },
+        "timeout": { "type": ["number", "string"] },
+        "method": { "type": "string" },
+        "headers": { "type": "object" },
+        "body": {},
+        "saveAs": { "type": "string" },
+        "waitFor": {},
+        "name": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

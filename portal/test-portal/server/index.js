@@ -12,80 +12,16 @@ import {
   updateTestCase
 } from './storage.js';
 import { enqueueRun, scheduleEligibleRuns } from './runManager.js';
+<<<<<<< HEAD
+=======
 import path from 'node:path';
 import fs from 'node:fs';
 import { artifactDir, getRunRow, mapRun } from './storage.js';
+>>>>>>> main
 import { applyOnboardingConfig, loadOnboardingConfig } from './onboarding.js';
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
-
-// Helper to (re)generate an index.html for a given run folder
-function ensureRunIndex(id) {
-  const runFolder = path.join(artifactDir, `run-${id}`);
-  if (!fs.existsSync(runFolder)) return false;
-  const indexPath = path.join(runFolder, 'index.html');
-  if (!fs.existsSync(indexPath)) {
-    const screenshotsDir = path.join(runFolder, 'screenshots');
-    const shots = [];
-    if (fs.existsSync(screenshotsDir)) {
-      for (const file of fs.readdirSync(screenshotsDir)) {
-        if (/\.(png|jpg|jpeg|gif)$/i.test(file)) {
-          shots.push({ title: file, relativePath: path.join('screenshots', file).replace(/\\/g, '/') });
-        }
-      }
-    }
-    const files = ['stdout.log', 'stderr.log', 'report.json', 'transcript.json', 'metadata.json'];
-    const lines = [];
-    lines.push('<!doctype html>');
-    lines.push('<meta charset="utf-8"/>');
-    lines.push(`<title>Run ${id} Artifacts</title>`);
-    lines.push('<style>body{font-family:system-ui,Segoe UI,Arial;margin:20px} .status{padding:2px 6px;border-radius:4px;background:#eee;text-transform:uppercase;font-size:12px} ul{line-height:1.8}</style>');
-    lines.push(`<h1>Run ${id} Artifacts</h1>`);
-    lines.push('<h2>Logs</h2>');
-    lines.push('<ul>');
-    for (const file of files) {
-      if (fs.existsSync(path.join(runFolder, file))) {
-        lines.push(`<li><a href="./${file}">${file}</a></li>`);
-      }
-    }
-    lines.push('</ul>');
-    if (shots.length) {
-      lines.push('<h2>Screenshots</h2>');
-      lines.push('<ul>');
-      for (const sc of shots) {
-        lines.push(`<li><a href="./${sc.relativePath}">${sc.title}</a></li>`);
-      }
-      lines.push('</ul>');
-    }
-    try { fs.writeFileSync(indexPath, lines.join('\n')); } catch {}
-  }
-  return true;
-}
-
-// Auto-generate and serve run index for both /artifacts and legacy /data/artifacts
-function registerArtifactIndexRoutes(prefix) {
-  app.get(`${prefix}/run-:id`, (req, res, next) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return next();
-    if (!ensureRunIndex(id)) return res.sendStatus(404);
-    res.sendFile(path.join(artifactDir, `run-${id}`, 'index.html'));
-  });
-  app.get(`${prefix}/run-:id/`, (req, res, next) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return next();
-    if (!ensureRunIndex(id)) return res.sendStatus(404);
-    res.sendFile(path.join(artifactDir, `run-${id}`, 'index.html'));
-  });
-}
-
-registerArtifactIndexRoutes('/artifacts');
-registerArtifactIndexRoutes('/data/artifacts');
-
-// Expose run artifacts (screenshots, traces, logs)
-app.use('/artifacts', express.static(artifactDir));
-// Back-compat: earlier links referenced /data/artifacts
-app.use('/data/artifacts', express.static(artifactDir));
 
 function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -342,6 +278,8 @@ app.get('/api/test-runs', (req, res) => {
   const testCaseId = typeof req.query.testCaseId === 'string' ? Number(req.query.testCaseId) : undefined;
   const runs = listRuns({ testCaseId: Number.isNaN(testCaseId) ? undefined : testCaseId });
   res.json(runs);
+<<<<<<< HEAD
+=======
 });
 
 app.get('/api/test-runs/:id', (req, res) => {
@@ -364,6 +302,7 @@ app.get('/api/test-runs/:id', (req, res) => {
     }));
   }
   res.json(run);
+>>>>>>> main
 });
 
 app.get('/api/metrics', (_req, res) => {

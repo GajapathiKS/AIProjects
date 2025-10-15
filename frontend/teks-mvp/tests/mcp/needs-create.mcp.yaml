@@ -1,90 +1,101 @@
-metadata:
-  title: Needs creation flow (MCP)
-  description: |
-    Login, seed a student, navigate to Needs page, click New Needs Assessment,
-    fill fields, create, and verify a unique stamp appears in the table.
-  tags:
-    - e2e
-    - needs
+name: Needs assessment creation (MCP)
+description: Creates a student via API, submits a needs assessment, and validates the record.
 config:
-  browser: chromium
-  headless: true
-  baseUrl: "{{environment.baseUrl}}"
+  baseUrl: http://localhost:4200
+  apiBaseUrl: http://localhost:5140
+  timeout: 30000
+  allowInsecureApiTls: true
+  servers:
+    - name: special-programs-api
+      command: dotnet run --urls http://localhost:5140
+      cwd: '{{ runtime.backendApiRoot }}'
+      url: http://localhost:5140/swagger/index.html
+      waitTimeout: 240000
+      retryInterval: 2000
+    - name: angular-app
+      command: npx ng serve --port 4200 --host 0.0.0.0
+      cwd: '{{ runtime.projectRoot }}'
+      url: http://localhost:4200
+      waitTimeout: 180000
+      retryInterval: 1000
 steps:
-  - navigate: "{{config.baseUrl}}/login"
+  - set:
+      stamp: "{{ runtime.runId }}"
+  - apiAuth:
+      saveAs: apiToken
+  - apiRequest:
+      method: POST
+      url: api/students
+      saveAs: newStudent
+      body:
+        firstName: "mcp_{{ vars.stamp }}_First"
+        lastName: "mcp_{{ vars.stamp }}_Last"
+        dateOfBirth: '2012-01-15'
+        gradeLevel: '5'
+        campus: "mcp_{{ vars.stamp }}_Campus"
+        guardianContact: "mcp_{{ vars.stamp }}_Guardian"
+        programFocus: "mcp_{{ vars.stamp }}_Focus"
+        localId: "mcp_{{ vars.stamp }}"
+        enrollmentDate: '2024-09-01'
+  - navigate:
+      url: /login
   - fill:
-      selector: 'input[formcontrolname="username"]'
-      value: '{{secrets.username}}'
+      target:
+        selector: 'input[formcontrolname="username"]'
+      value: '{{ secrets.username }}'
   - fill:
-      selector: 'input[formcontrolname="password"]'
-      value: '{{secrets.password}}'
+      target:
+        selector: 'input[formcontrolname="password"]'
+      value: '{{ secrets.password }}'
   - click:
-      selector: 'button[type="submit"]'
+      target:
+        role: button
+        name: 'Sign in'
   - waitFor:
-      selector: 'h1'
-      text: 'Texas TEKS Program Manager'
-  - evaluate:
-      script: |
-        (async () => {
-          async function getToken() {
-            const base = 'https://localhost:7140';
-            const creds = [
-              { username: 'admin', password: 'ChangeMe123!' },
-              { username: 'admin', password: 'ChangeMe123!' }
-            ];
-            for (const c of creds) {
-              const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
-              if (r.ok) { const j = await r.json(); return j.token || j.accessToken; }
-            }
-            throw new Error('Failed to obtain auth token');
-          }
-          const token = await getToken();
-          const stamp = Date.now();
-          const payload = {
-            firstName: `mcp_${stamp}_First`,
-            lastName: `mcp_${stamp}_Last`,
-            dateOfBirth: '2012-01-15',
-            gradeLevel: '5',
-            campus: `mcp_${stamp}_Campus`,
-            guardianContact: `mcp_${stamp}_Guardian`,
-            programFocus: `mcp_${stamp}_Focus`,
-            localId: `mcp_${stamp}`,
-            enrollmentDate: '2024-09-01',
-            nextReviewDate: null
-          };
-          const res = await fetch('https://localhost:7140/api/students', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload) });
-          if (!res.ok) throw new Error('Failed to seed student');
-          const data = await res.json();
-          const id = String(data.id ?? data);
-          const url = `${window.location.origin}/students/${id}/needs`;
-          window.location.href = url;
-          return { id, stamp };
-        })()
+      target:
+        role: heading
+        name: 'Dashboard'
+      timeout: 30000
+  - navigate:
+      url: '/students/{{ vars.newStudent.id }}/needs'
   - waitFor:
-      selector: 'h2'
-      text: 'Needs Assessments'
-  - clickText:
-      selector: 'a.btn.primary'
-      text: '+ New Needs Assessment'
+      target:
+        text: 'Needs Assessments'
+  - click:
+      target:
+        role: link
+        name: '+ New Needs Assessment'
   - waitFor:
-      selector: 'h2'
-      text: 'New Needs Assessment'
-  - evaluate:
-      script: |
-        () => {
-          const stamp = Date.now();
-          document.querySelector('textarea[name="academicNeeds"]').value = 'mcp_reading_' + stamp;
-          document.querySelector('textarea[name="supportServices"]').value = 'mcp_tutoring_' + stamp;
-          document.querySelector('textarea[name="instructionalStrategies"]').value = 'mcp_small_group_' + stamp;
-          document.querySelector('textarea[name="assessmentTools"]').value = 'mcp_map_' + stamp;
-          const btn = Array.from(document.querySelectorAll('button')).find(b => (b.textContent||'').trim() === 'Create');
-          if (!btn) throw new Error('Create button not found');
-          btn.click();
-          return true;
-        }
+      target:
+        role: heading
+        name: 'New Needs Assessment'
+      timeout: 20000
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="academicNeeds"]'
+      value: 'support reading {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="supportServices"]'
+      value: 'tutoring {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="instructionalStrategies"]'
+      value: 'small group {{ vars.stamp }}'
+  - fill:
+      target:
+        selector: 'textarea[formcontrolname="assessmentTools"]'
+      value: 'map {{ vars.stamp }}'
+  - click:
+      target:
+        role: button
+        name: 'Create'
   - waitFor:
-      selector: 'h2'
-      text: 'Needs Assessments'
+      target:
+        text: 'Needs assessment added.'
+  - expectText:
+      target:
+        selector: 'table.table tbody'
+      contains: '{{ vars.stamp }}'
   - screenshot:
-      name: 'needs-created'
-      fullPage: true
+      name: 'needs-create-confirmation'

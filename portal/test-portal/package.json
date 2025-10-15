@@ -9,13 +9,7 @@
     "preview": "vite preview",
     "start:server": "node server/index.js",
     "start:mcp": "node server/mcpServer.js",
-    "onboard": "node scripts/onboard.js",
-    "mcp:trigger": "node scripts/mcp-trigger-run.js",
-    "runs:index": "node scripts/generate-run-index.js",
-    "auto:onboard": "node scripts/autodiscover-and-onboard.js",
-    "auto:onboard:run:e2e": "node scripts/autodiscover-and-onboard.js --run=e2e",
-    "auto:onboard:run:mcp": "node scripts/autodiscover-and-onboard.js --run=mcp",
-    "auto:onboard:run:all": "node scripts/autodiscover-and-onboard.js --run=all"
+    "onboard": "node scripts/onboard.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",

@@ -1,43 +1,32 @@
-metadata:
-  title: Students overview smoke (MCP)
-  description: |
-    Exercise the login flow and verify the students list renders with the add student form
-    using the Model Context Protocol client controls.
-  tags:
-    - smoke
-    - students
+name: Students overview (MCP)
+description: Confirm the students list renders and quick actions are available.
 config:
-  browser: chromium
-  headless: true
-  baseUrl: "{{environment.baseUrl}}"
+  baseUrl: http://localhost:4200
+  timeout: 20000
 steps:
-  - navigate: "{{config.baseUrl}}/login"
+  - navigate:
+      url: /login
   - fill:
-      selector: 'input[formcontrolname="username"]'
-      value: '{{secrets.username}}'
+      target:
+        selector: 'input[formcontrolname="username"]'
+      value: '{{ secrets.username }}'
   - fill:
-      selector: 'input[formcontrolname="password"]'
-      value: '{{secrets.password}}'
+      target:
+        selector: 'input[formcontrolname="password"]'
+      value: '{{ secrets.password }}'
   - click:
-      selector: 'button[type="submit"]'
+      target:
+        role: button
+        name: 'Sign in'
   - waitFor:
-      selector: 'h1'
-      text: 'Texas TEKS Program Manager'
-  - navigate: "{{config.baseUrl}}/students"
+      target:
+        role: heading
+        name: 'Dashboard'
   - waitFor:
-      selector: 'h2'
-      text: 'Students'
-  # Mirror E2E: Add Student should be disabled until the form is filled
-  - evaluate:
-      script: |
-        () => {
-          const buttons = Array.from(document.querySelectorAll('button'));
-          const target = buttons.find(b => (b.textContent || '').trim().toLowerCase() === 'add student');
-          if (!target) throw new Error('Add Student button not found');
-          const disabled = target.hasAttribute('disabled') || (/** @type {HTMLButtonElement} */(target)).disabled === true;
-          if (!disabled) throw new Error('Add Student button is expected to be disabled');
-          return true;
-        }
+      target:
+        selector: 'table.table tbody tr'
+  - expectVisible:
+      target:
+        selector: 'table.table tbody tr a.btn'
   - screenshot:
       name: 'students-overview'
-      fullPage: true

@@ -6,11 +6,8 @@
     "build": "ng build",
     "test": "ng test",
     "test:e2e": "playwright test -c playwright.config.ts",
-    "mcp:run": "node mcp/run-scenario.mjs --file tests/mcp/students-overview.mcp.yaml --start-server --artifacts test-results/mcp",
-    "mcp:run:students": "node mcp/run-scenario.mjs --file tests/mcp/students-overview.mcp.yaml --start-server --artifacts test-results/mcp",
-    "mcp:run:landing": "node mcp/run-scenario.mjs --file tests/mcp/landing-overview.mcp.yaml --start-server --artifacts test-results/mcp",
-    "mcp:run:students:journey": "node mcp/run-scenario.mjs --file tests/mcp/students-journey.mcp.yaml --start-server --artifacts test-results/mcp",
-    "mcp:run:login": "node mcp/run-scenario.mjs --file tests/mcp/login.mcp.yaml --start-server --artifacts test-results/mcp"
+    "mcp:run": "node mcp/run-scenario.js",
+    "mcp:convert": "node mcp/convert-spec.js"
   },
   "private": true,
   "type": "module",
@@ -28,20 +25,23 @@
     "zone.js": "^0.14.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.47.2",
-    "@modelcontextprotocol/sdk": "^1.20.0",
-    "@playwright/mcp": "^0.0.42",
-    "js-yaml": "^4.1.0",
     "@angular-devkit/build-angular": "^17.2.1",
     "@angular/cli": "^17.2.1",
     "@angular/compiler-cli": "^17.2.0",
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "@playwright/mcp": "^0.0.42",
+    "@playwright/test": "^1.47.2",
     "@types/jasmine": "~5.1.0",
+    "ajv": "^8.17.1",
+    "chalk": "^5.6.2",
     "jasmine-core": "~5.1.0",
+    "js-yaml": "^4.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.3.3"
+    "typescript": "~5.3.3",
+    "yargs": "^18.0.0"
   }
 }

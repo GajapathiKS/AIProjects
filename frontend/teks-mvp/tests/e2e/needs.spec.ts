@@ -12,9 +12,6 @@ test('add needs assessment appears in list', async ({ page }) => {
 
   await page.goto(`/students/${student.id}/needs`);
   await expect(page).toHaveURL(new RegExp(`/students/${student.id}/needs$`));
-  // eslint-disable-next-line no-console
-  console.log('e2e-step: needs list opened for', student.id);
-  await test.info().attach('needs-list', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
 
   // Open New Needs Assessment page
   const newBtn = page.getByRole('link', { name: '+ New Needs Assessment' });

@@ -36,6 +36,13 @@ The `portal/test-portal` workspace already includes the first working slice of t
 
 Use the README in `portal/test-portal` for step-by-step commands to install dependencies, start the REST service, or launch the MCP stdio server against this implementation.
 
+### MCP YAML workflow quick start
+
+- `frontend/teks-mvp/mcp/run-scenario.js` executes a YAML scenario locally. Run `node mcp/run-scenario.js --file tests/mcp/needs-create.mcp.yaml --start-server` from the Angular workspace to validate the dual-mode flows. The scenario now boots both the Angular dev server and the .NET API automatically when `--start-server` is supplied.
+- `frontend/teks-mvp/mcp/schema/mcp-scenario.schema.json` defines the supported shape for YAML steps and powers runtime validation.
+- `frontend/teks-mvp/mcp/README.md` documents best practices, including explicit waits, selector preferences, and how to seed data with `apiAuth`/`apiRequest`.
+- `frontend/teks-mvp/mcp/convert-spec.js` generates a starter YAML outline from existing `.spec.ts` files to speed up authoring.
+
 ---
 
 ## Codex-Style System Prompt

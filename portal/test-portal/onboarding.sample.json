@@ -115,6 +115,22 @@
       ],
       "schedule": "manual",
       "tags": ["progress", "mcp"]
+    },
+    {
+      "title": "Needs assessment create via MCP",
+      "feature": "Needs",
+      "type": "playwright",
+      "environment": "Local UI",
+      "playwrightMode": "mcp",
+      "mcpSource": "frontend/teks-mvp/tests/mcp/needs-create.mcp.yaml",
+      "steps": [
+        "Seed student via API",
+        "Submit new needs assessment",
+        "Verify assessment is listed"
+      ],
+      "schedule": "manual",
+      "captureArtifacts": true,
+      "tags": ["needs", "create", "mcp"]
     }
   ]
 }

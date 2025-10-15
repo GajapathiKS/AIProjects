@@ -10,9 +10,8 @@ function buildLookup(cases: TestCase[] | null | undefined) {
 
 function buildUrl(artifactPath: string | undefined, relative: string) {
   if (!artifactPath) return null;
-  const cleanBase = artifactPath.startsWith('/') ? artifactPath : `/${artifactPath}`;
-  const cleanRel = relative.replace(/^\//, '');
-  return `${cleanBase}/${cleanRel}`;
+  const base = artifactPath.replace(/^\//, '');
+  return `/${base}/${relative}`;
 }
 
 export default function RunsPage() {
@@ -94,7 +93,11 @@ export default function RunsPage() {
                         </ul>
                       ) : '—'}
                     </td>
+<<<<<<< HEAD
+                    <td>{run.artifactPath ? <a href={`/${run.artifactPath}`} target="_blank" rel="noreferrer">open</a> : '—'}</td>
+=======
                     <td>{run.artifactPath ? <a href={`${run.artifactPath}`} target="_blank" rel="noreferrer">open</a> : '—'}</td>
+>>>>>>> main
                   </tr>
                 );
               }) : (

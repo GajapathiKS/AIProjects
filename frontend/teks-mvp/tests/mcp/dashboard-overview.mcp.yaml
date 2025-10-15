@@ -1,34 +1,32 @@
-metadata:
-  title: Dashboard overview smoke (MCP)
-  description: |
-    Validate the primary dashboard experience by signing in and confirming the
-    key navigation links render for authenticated educators.
-  tags:
-    - smoke
-    - dashboard
+name: Dashboard overview (MCP)
+description: Ensure an educator can sign in and see the dashboard callouts.
 config:
-  browser: chromium
-  headless: true
-  baseUrl: "{{environment.baseUrl}}"
+  baseUrl: http://localhost:4200
+  timeout: 20000
 steps:
-  - navigate: "{{config.baseUrl}}/login"
+  - navigate:
+      url: /login
   - fill:
-      selector: 'input[formcontrolname="username"]'
-      value: '{{secrets.username}}'
+      target:
+        selector: 'input[formcontrolname="username"]'
+      value: '{{ secrets.username }}'
   - fill:
-      selector: 'input[formcontrolname="password"]'
-      value: '{{secrets.password}}'
+      target:
+        selector: 'input[formcontrolname="password"]'
+      value: '{{ secrets.password }}'
   - click:
-      selector: 'button[type="submit"]'
+      target:
+        role: button
+        name: 'Sign in'
   - waitFor:
-      selector: 'h1'
-      text: 'Texas TEKS Program Manager'
+      target:
+        role: heading
+        name: 'Dashboard'
   - expectVisible:
-      selector: 'nav a'
-      text: 'Dashboard'
+      target:
+        text: 'Student overview'
   - expectVisible:
-      selector: 'nav a'
-      text: 'Students'
+      target:
+        text: 'Recent activity'
   - screenshot:
       name: 'dashboard-overview'
-      fullPage: true

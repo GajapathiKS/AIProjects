@@ -40,7 +40,13 @@ export interface TestRun {
   finishedAt?: string;
   log?: string;
   artifactPath?: string;
-  screenshots: Screenshot[];
+  screenshots: {
+    title: string;
+    project?: string;
+    status?: string;
+    fileName: string;
+    relativePath: string;
+  }[];
 }
 
 export interface Screenshot {
