@@ -2,10 +2,10 @@
 
 Automation control plane for the TEKS MVP Playwright test suite. The portal lets you:
 
-- catalogue environments (Dev/QA/Prod, different auth strategies, etc.)
-- onboard Playwright scenarios per feature/page with schedules and metadata
-- trigger runs manually, via the built-in scheduler, or through the MCP server
-- inspect execution history, logs, JSON reports, traces, and screenshot evidence
+- catalogue environments (Dev/QA/Prod, staging, etc.) without embedding auth tokens in the portal
+- onboard both traditional `.spec.ts` suites and human-readable MCP scenarios per feature/page
+- trigger runs manually, via the built-in scheduler, or through the MCP client integrations
+- inspect execution history, logs, JSON reports, traces, and screenshot evidence from the dedicated Runs page
 
 All persistence lives under `data/` (SQLite database and run artifacts).
 
@@ -31,7 +31,7 @@ cd portal/test-portal
 npm install
 ```
 
-The first run will create `data/app.db` and seed the schema automatically.
+The first run will create `data/portal.sqlite` and seed the schema automatically.
 
 ## Running the services
 
@@ -66,30 +66,18 @@ npm run start:mcp
 
 > **Tip:** When testing locally you can open a second terminal and run `node server/mcpServer.js` directly. The server logs "Playwright MCP server is ready" to stderr once it is accepting connections.
 
-### 4. Run both (REST + MCP)
-
-```bash
-npm run dev:all
-```
-
-- Starts both the REST API (port 4001) and the MCP stdio server.
-- Prints when the REST API is ready; press Ctrl+C to stop both processes.
-- Use this when you want to drive runs from an MCP client and also view them in the UI/REST.
-
 ## Typical workflow (REST API)
 
 Below are curl snippets that exercise the main flows while the API server is running.
 
-1. **Create an environment** (configure base URL + auth):
+1. **Create an environment** (configure base URL):
    ```bash
    curl -X POST http://localhost:4001/api/environments \
      -H 'Content-Type: application/json' \
      -d '{
        "name": "Local",
        "type": "web",
-       "baseUrl": "http://localhost:4200",
-       "authType": "token",
-       "authToken": "${LOCAL_TOKEN}"
+       "baseUrl": "http://localhost:4200"
      }'
    ```
 
@@ -102,7 +90,8 @@ Below are curl snippets that exercise the main flows while the API server is run
        "feature": "Students",
        "type": "playwright",
        "environmentId": 1,
-       "entryPoint": "tests/e2e/students.spec.ts",
+       "playwrightMode": "traditional",
+       "entryPoint": "frontend/teks-mvp/tests/e2e/students.spec.ts",
        "steps": ["login", "navigate", "assert"],
        "schedule": "manual",
        "captureArtifacts": true,
@@ -128,7 +117,43 @@ Below are curl snippets that exercise the main flows while the API server is run
      - `stdout.log` / `stderr.log` – raw Playwright output.
      - `report.json` – parsed Playwright JSON reporter output.
      - `test-results/` – Playwright trace + attachments.
-     - `screenshots/` – auto-captured evidence with run-aware filenames.
+     - `screenshots/` – auto-captured evidence with run-aware filenames (includes MCP scenario captures).
+
+Browse `http://localhost:4201/runs` in the UI to explore the full history, filters, and screenshot links.
+
+## Configuring MCP client secrets
+
+MCP scenarios often require API keys (e.g. ChatGPT or GitHub Copilot tokens) as well as credentials for the target application. The portal avoids storing secrets directly in the database—set them through environment variables or a dedicated secrets file instead:
+
+1. **Create a secrets file** (dotenv format):
+   ```bash
+   mkdir -p ~/.config/playwright-mcp
+   cat <<'ENV' > ~/.config/playwright-mcp/secrets.env
+   OPENAI_API_KEY=sk-your-openai-key
+   GITHUB_COPILOT_ACCESS_TOKEN=ghu_your_copilot_token
+   PLAYWRIGHT_MCP_USERNAME=admin
+   PLAYWRIGHT_MCP_PASSWORD=P@ssword1
+   ENV
+   ```
+
+2. **Point the portal to the secrets** before starting the server:
+   ```bash
+   export MCP_SECRETS_FILE=~/.config/playwright-mcp/secrets.env
+   npm run start:server
+   ```
+
+   The MCP client runner also respects `PLAYWRIGHT_MCP_USERNAME` and `PLAYWRIGHT_MCP_PASSWORD` environment variables if you prefer not to create a file. When absent, it falls back to the seeded API credentials (`admin / P@ssword1`).
+
+3. **Grant the secrets to your MCP client** (ChatGPT, Copilot, Claude, etc.) following their documentation—each token stays outside of the portal database and is read only when invoking MCP scenarios.
+
+## Dual onboarding (traditional + MCP)
+
+The portal now distinguishes between traditional Playwright suites and MCP scenarios:
+
+- **Traditional** – runs a `.spec.ts` entry point through `npx playwright test` inside `frontend/teks-mvp` (existing behaviour).
+- **MCP** – reads a YAML scenario file, launches `@playwright/mcp`, and replays the defined actions via the new MCP client runner (`server/mcpClientRunner.js`). Screenshots, transcripts, and stderr logs are stored alongside traditional artifacts.
+
+From the Scenarios page you can pick the mode, provide the appropriate entry path, and document the intent. Bulk onboarding supports both styles via `playwrightMode` and `mcpSource` fields.
 
 ## Bulk onboarding from config
 
@@ -183,7 +208,7 @@ You can still trigger the same case manually via API or MCP; the scheduler will 
 To wipe the portal and start clean:
 
 ```bash
-rm -rf data/app.db data/artifacts
+rm -rf data/portal.sqlite data/artifacts
 npm run start:server
 ```
 
@@ -193,42 +218,13 @@ This recreates the SQLite database and artifact folders on next launch.
 
 - **Playwright project not found:** ensure the `frontend/teks-mvp` directory exists relative to the repo root and contains the Playwright tests.
 - **Missing browser binaries:** run `cd ../../frontend/teks-mvp && npx playwright install` to install the required browsers.
-- **Authentication secrets:** use environment-specific tokens in the `authToken` field or extend the schema in `server/storage.js` to integrate with secret stores.
+- **Authentication secrets:** configure them through `MCP_SECRETS_FILE`, `PLAYWRIGHT_MCP_USERNAME`, and `PLAYWRIGHT_MCP_PASSWORD` rather than embedding tokens in the database.
 
 ## Related resources
 
 - `server/index.js` – REST API entry point.
 - `server/mcpServer.js` – MCP stdio server exposing automation tools.
 - `server/runManager.js` – queueing, scheduler, and Playwright invocation.
+- `server/mcpClientRunner.js` – executes YAML scenarios via the Playwright MCP client.
 - `server/storage.js` – SQLite schema + persistence helpers.
-
-## POC: MCP vs REST transports
-
-To see the difference between starting only the MCP server, only the REST API, or both, run:
-
-```powershell
-# From portal/test-portal
-pwsh -File scripts/poc-transport-diff.ps1 -Mode server-only   # Starts REST API, probes /api
-pwsh -File scripts/poc-transport-diff.ps1 -Mode mcp-only      # Starts MCP stdio server, shows REST is unavailable
-pwsh -File scripts/poc-transport-diff.ps1 -Mode both          # Starts both; runs via MCP will show in REST/UI
-```
-
-This script starts processes, waits briefly, probes `http://localhost:4001/api/test-cases`, prints a summary, and then cleans up the processes.
-
-## POC: Trigger via MCP, observe via REST
-
-To demonstrate end-to-end:
-
-```bash
-# Ensure dependencies are installed and Playwright project is set up
-npm run dev:all   # optional: runs both servers; you can also let the demo start the API automatically
-
-# Trigger a run via MCP by test case id
-npm run mcp:run -- --id 4
-
-# Or by title
-npm run mcp:run -- --title "Goals page (simple)"
-```
-
-The script connects to the MCP stdio server, calls the `run-test-case` tool, then polls the REST API `/api/test-runs/:id` for completion and prints a short summary including the first few screenshot URLs.
 

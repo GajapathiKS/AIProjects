@@ -1,0 +1,35 @@
+metadata:
+  title: Students overview smoke (MCP)
+  description: |
+    Exercise the login flow and verify the students list renders with the add student form
+    using the Model Context Protocol client controls.
+  tags:
+    - smoke
+    - students
+config:
+  browser: chromium
+  headless: true
+  baseUrl: "{{environment.baseUrl}}"
+steps:
+  - navigate: "{{config.baseUrl}}/login"
+  - fill:
+      selector: 'input[formcontrolname="username"]'
+      value: '{{secrets.username}}'
+  - fill:
+      selector: 'input[formcontrolname="password"]'
+      value: '{{secrets.password}}'
+  - click:
+      selector: 'button[type="submit"]'
+  - waitFor:
+      selector: 'h1'
+      text: 'Texas TEKS Program Manager'
+  - navigate: "{{config.baseUrl}}/students"
+  - waitFor:
+      selector: 'h2'
+      text: 'Students'
+  - expectVisible:
+      selector: 'button.btn.primary'
+      text: 'Add Student'
+  - screenshot:
+      name: 'students-overview'
+      fullPage: true

@@ -13,14 +13,6 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function expandEnvPlaceholders(value) {
-  if (typeof value !== 'string') return value;
-  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_m, name) => {
-    const v = process.env[name];
-    return typeof v === 'string' ? v : _m; // keep placeholder if not found
-  });
-}
-
 function resolveConfigPath(spec) {
   const cwd = process.cwd();
   const candidate = path.isAbsolute(spec) ? spec : path.join(cwd, spec);
@@ -103,24 +95,26 @@ function asArray(value) {
 
 function normalizeEnvironment(def) {
   return {
-    name: normalizeString(expandEnvPlaceholders(def.name || def.title)),
-    type: normalizeString(expandEnvPlaceholders(def.type || def.category || 'web')) || 'web',
-    baseUrl: normalizeString(expandEnvPlaceholders(def.baseUrl || def.base_url || def.url)),
-    authType: normalizeString(expandEnvPlaceholders(def.authType || def.auth_type || 'none')) || 'none',
-    authToken: expandEnvPlaceholders(def.authToken ?? def.auth_token ?? undefined),
-    username: expandEnvPlaceholders(def.username ?? def.user ?? undefined),
-    password: expandEnvPlaceholders(def.password ?? def.pass ?? undefined),
-    notes: normalizeString(expandEnvPlaceholders(def.notes || def.description))
+    name: normalizeString(def.name || def.title),
+    type: normalizeString(def.type || def.category || 'web') || 'web',
+    baseUrl: normalizeString(def.baseUrl || def.base_url || def.url),
+    notes: normalizeString(def.notes || def.description)
   };
 }
 
 function normalizeTestCase(def) {
+  const mode = normalizeString(def.playwrightMode || def.playwright_mode || def.mode || 'traditional') || 'traditional';
+  const entryPoint = normalizeString(def.entryPoint || def.path || def.spec || def.scenarioPath || def.scenario);
+  const mcpSource = normalizeString(def.mcpSource || def.mcp_source || def.scenario || def.scenarioPath);
   return {
-    title: normalizeString(expandEnvPlaceholders(def.title || def.name)),
-    description: normalizeString(expandEnvPlaceholders(def.description || '')),
-    feature: normalizeString(expandEnvPlaceholders(def.feature || def.module)),
-    type: normalizeString(expandEnvPlaceholders(def.type || 'playwright')) || 'playwright',
-    entryPoint: normalizeString(expandEnvPlaceholders(def.entryPoint || def.path || def.spec)),
+    title: normalizeString(def.title || def.name),
+    description: normalizeString(def.description || ''),
+    feature: normalizeString(def.feature || def.module),
+    type: normalizeString(def.type || 'playwright') || 'playwright',
+    playwrightMode: mode,
+    entryPoint: entryPoint || mcpSource,
+    mcpSource: mcpSource || entryPoint,
+    mcpConfig: typeof def.mcpConfig === 'object' ? def.mcpConfig : (typeof def.config === 'object' ? def.config : null),
     steps: asArray(def.steps),
     schedule: normalizeSchedule(def.schedule),
     captureArtifacts: def.captureArtifacts ?? def.capture_artifacts ?? true,
@@ -174,10 +168,6 @@ function applyOnboardingConfig(config, { dryRun = false } = {}) {
       const needsUpdate = (
         existing.type !== normalized.type ||
         existing.baseUrl !== normalized.baseUrl ||
-        existing.authType !== normalized.authType ||
-        (existing.authToken ?? null) !== (normalized.authToken ?? null) ||
-        (existing.username ?? null) !== (normalized.username ?? null) ||
-        (existing.password ?? null) !== (normalized.password ?? null) ||
         (existing.notes ?? '') !== (normalized.notes ?? '')
       );
       if (needsUpdate) {
@@ -239,8 +229,11 @@ function applyOnboardingConfig(config, { dryRun = false } = {}) {
         description: normalized.description,
         feature: normalized.feature,
         type: normalized.type,
+        playwrightMode: normalized.playwrightMode,
         environmentId,
         entryPoint: normalized.entryPoint,
+        mcpSource: normalized.mcpSource,
+        mcpConfig: normalized.mcpConfig,
         steps: normalized.steps,
         schedule: normalized.schedule,
         captureArtifacts: normalized.captureArtifacts,
@@ -268,6 +261,9 @@ function applyOnboardingConfig(config, { dryRun = false } = {}) {
         existing.description !== payload.description ||
         existing.feature !== payload.feature ||
         existing.type !== payload.type ||
+        existing.playwrightMode !== payload.playwrightMode ||
+        (existing.mcpSource ?? '') !== (payload.mcpSource ?? '') ||
+        JSON.stringify(existing.mcpConfig ?? null) !== JSON.stringify(payload.mcpConfig ?? null) ||
         existing.entryPoint !== payload.entryPoint ||
         existing.schedule !== payload.schedule ||
         existing.captureArtifacts !== payload.captureArtifacts ||

@@ -9,15 +9,14 @@
     "preview": "vite preview",
     "start:server": "node server/index.js",
     "start:mcp": "node server/mcpServer.js",
-    "onboard": "node scripts/onboard.js",
-    "poc:transports": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/poc-transport-diff.ps1",
-    "dev:all": "node scripts/dev-all.js",
-    "mcp:run": "node scripts/mcp-run-demo.js"
+    "onboard": "node scripts/onboard.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",
+    "@playwright/mcp": "^0.0.42",
     "better-sqlite3": "^9.0.0",
     "express": "^4.19.2",
+    "js-yaml": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.2",

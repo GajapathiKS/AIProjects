@@ -23,7 +23,15 @@ async function getAuthToken(baseApi = DEFAULT_API) {
   return token;
 }
 
-export async function createStudent(api: APIRequestContext, baseApi = DEFAULT_API) {
+export interface SeededStudent {
+  id: string;
+  localId: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export async function createStudent(api: APIRequestContext, baseApi = DEFAULT_API): Promise<SeededStudent> {
   const stamp = Date.now();
   const payload = {
     firstName: `pw_${stamp}_First`,
@@ -40,7 +48,14 @@ export async function createStudent(api: APIRequestContext, baseApi = DEFAULT_AP
   const resp = await api.post(`${baseApi}/api/students`, { data: payload });
   expect(resp.ok()).toBeTruthy();
   const data = await resp.json();
-  return data.id as string;
+  const id = String(data.id ?? data);
+  return {
+    id,
+    localId: payload.localId,
+    displayName: `${payload.firstName} ${payload.lastName}`,
+    firstName: payload.firstName,
+    lastName: payload.lastName
+  };
 }
 
 export async function initApi(baseApi = DEFAULT_API) {

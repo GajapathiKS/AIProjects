@@ -4,13 +4,15 @@ import { useAsync } from '../hooks/useAsync';
 
 export default function DashboardPage() {
   const metrics = useAsync(ApiClient.metrics, []);
-  const runs = useAsync(() => ApiClient.listRuns(), []);
   const testCases = useAsync(ApiClient.listTestCases, []);
 
-  const testCaseLookup = useMemo(() => {
-    const map = new Map<number, string>();
-    (testCases.value ?? []).forEach(tc => map.set(tc.id, tc.title));
-    return map;
+  const modeCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    (testCases.value ?? []).forEach(tc => {
+      const key = tc.playwrightMode || 'traditional';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+    return counts;
   }, [testCases.value]);
 
   return (
@@ -42,43 +44,21 @@ export default function DashboardPage() {
       </section>
 
       <section className="card">
-        <h2>Recent Playwright MCP Runs</h2>
-        {runs.value ? (
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Test Case</th>
-                <th>Status</th>
-                <th>Triggered By</th>
-                <th>Started</th>
-                <th>Finished</th>
-                <th>Artifacts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.value.map(run => (
-                <tr key={run.id}>
-                  <td>{run.id}</td>
-                  <td>{testCaseLookup.get(run.testCaseId) ?? `#${run.testCaseId}`}</td>
-                  <td><span className={`status ${run.status}`}>{run.status}</span></td>
-                  <td>{run.triggeredBy}</td>
-                  <td>{new Date(run.startedAt).toLocaleString()}</td>
-                  <td>{run.finishedAt ? new Date(run.finishedAt).toLocaleString() : '—'}</td>
-                  <td>
-                    {run.artifactPath ? (
-                      <code>{run.artifactPath}</code>
-                    ) : (
-                      'pending'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2>Playwright Coverage</h2>
+        {testCases.value ? (
+          <div className="mode-grid">
+            {Array.from(modeCounts.entries()).map(([mode, count]) => (
+              <div className="tile" key={mode}>
+                <strong>{mode}</strong>
+                <span>{count}</span>
+              </div>
+            ))}
+            {!modeCounts.size && <p>No test cases registered yet.</p>}
+          </div>
         ) : (
-          <p>Loading run history…</p>
+          <p>Loading scenario catalog…</p>
         )}
+        <p className="hint">Manage scenarios and executions from the Scenarios and Runs sections.</p>
       </section>
     </div>
   );

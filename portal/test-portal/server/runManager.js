@@ -11,6 +11,7 @@ import {
   updateTestCaseRunStatus
 } from './storage.js';
 import { runPlaywright } from './playwrightRunner.js';
+import { runMcpScenario } from './mcpClientRunner.js';
 
 function normalizeTestCase(input) {
   if (typeof input === 'number') {
@@ -27,7 +28,7 @@ function normalizeTestCase(input) {
   return null;
 }
 
-export function enqueueRun(testCase, triggeredBy = 'manual', environmentOverrides = {}) {
+export function enqueueRun(testCase, triggeredBy = 'manual') {
   const row = normalizeTestCase(testCase);
   if (!row) {
     throw new Error('Test case not found');
@@ -42,23 +43,16 @@ export function enqueueRun(testCase, triggeredBy = 'manual', environmentOverride
   fs.mkdirSync(runFolder, { recursive: true });
 
   const steps = Array.isArray(row.steps) ? row.steps : JSON.parse(row.steps);
-  const sanitizedOverrides = (() => {
-    const o = { ...(environmentOverrides ?? {}) };
-    if (typeof o.authToken === 'string' && o.authToken.length > 0) {
-      o.authToken = '***';
-    }
-    return Object.keys(o).length ? o : undefined;
-  })();
-
   const metadata = {
     runId,
     triggeredBy,
     startedAt: start,
     environmentId: row.environment_id,
     entryPoint: row.entry_point,
+    playwrightMode: row.playwright_mode ?? 'traditional',
+    mcpSource: row.mcp_source ?? null,
     captureArtifacts: !!row.capture_artifacts,
-    steps,
-    environmentOverrides: sanitizedOverrides
+    steps
   };
 
   const metadataPath = path.join(runFolder, 'metadata.json');
@@ -77,13 +71,23 @@ export function enqueueRun(testCase, triggeredBy = 'manual', environmentOverride
   (async () => {
     try {
       const env = getEnvironmentRow(metadata.environmentId);
-      const mergedEnv = { ...env, ...(environmentOverrides ?? {}) };
-      const result = await runPlaywright({
-        runId,
-        testCase: row,
-        environment: mergedEnv,
-        artifactDir: runFolder
-      });
+      const mode = (row.playwright_mode ?? 'traditional').toLowerCase();
+      let result;
+      if (mode === 'mcp') {
+        result = await runMcpScenario({
+          runId,
+          testCase: row,
+          environment: env,
+          artifactDir: runFolder
+        });
+      } else {
+        result = await runPlaywright({
+          runId,
+          testCase: row,
+          environment: env,
+          artifactDir: runFolder
+        });
+      }
       const finish = new Date().toISOString();
       const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
       const log = `Run ${runId} ${result.status}. ${result.summary}`;
@@ -91,7 +95,8 @@ export function enqueueRun(testCase, triggeredBy = 'manual', environmentOverride
         status: result.status,
         finishedAt: finish,
         log,
-        artifactPath
+        artifactPath,
+        screenshots: result.screenshots ?? []
       });
       updateTestCaseRunStatus(row.id, finish, result.status);
       patchMetadata({

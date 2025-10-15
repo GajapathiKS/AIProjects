@@ -160,6 +160,24 @@ li {
   background: #f1f5f9;
 }
 
+.chip {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(96, 165, 250, 0.2);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  text-transform: capitalize;
+}
+
+.path {
+  display: inline-block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .panel .checkbox {
   display: flex;
   align-items: center;
@@ -183,4 +201,57 @@ code {
 
 .danger {
   background: #ef4444;
+}
+
+.runs-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.runs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.runs-header .controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.runs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.runs-table th,
+.runs-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #1f2a4a;
+  vertical-align: top;
+}
+
+.screenshot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mode-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.hint {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.65);
 }

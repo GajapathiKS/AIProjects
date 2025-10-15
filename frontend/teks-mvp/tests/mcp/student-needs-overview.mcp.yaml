@@ -1,0 +1,48 @@
+metadata:
+  title: Student needs overview (MCP)
+  description: |
+    Confirm educators can access the needs assessment workspace for a student and
+    view the creation controls for capturing new interventions.
+  tags:
+    - regression
+    - needs
+config:
+  browser: chromium
+  headless: true
+  baseUrl: "{{environment.baseUrl}}"
+steps:
+  - navigate: "{{config.baseUrl}}/login"
+  - fill:
+      selector: 'input[formcontrolname="username"]'
+      value: '{{secrets.username}}'
+  - fill:
+      selector: 'input[formcontrolname="password"]'
+      value: '{{secrets.password}}'
+  - click:
+      selector: 'button[type="submit"]'
+  - waitFor:
+      selector: 'table.table tbody tr a.btn'
+  - evaluate:
+      script: |
+        () => {
+          const firstLink = document.querySelector('table.table tbody tr a.btn');
+          if (!firstLink) {
+            throw new Error('No student rows available to inspect');
+          }
+          firstLink.click();
+          return true;
+        }
+  - waitFor:
+      selector: '.sidebar a.active'
+      text: 'Info'
+  - clickText:
+      selector: '.sidebar a'
+      text: 'Needs'
+  - waitFor:
+      selector: 'h2'
+      text: 'Needs Assessments'
+  - expectVisible:
+      selector: 'a.btn.primary'
+      text: '+ New Needs Assessment'
+  - screenshot:
+      name: 'student-needs-overview'

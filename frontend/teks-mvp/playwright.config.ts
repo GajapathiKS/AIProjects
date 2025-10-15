@@ -5,8 +5,6 @@ export default defineConfig({
   testDir: './tests/e2e',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4200',
-    // Allow the app to call https://localhost:7140 with a dev certificate
-    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'on'
   },

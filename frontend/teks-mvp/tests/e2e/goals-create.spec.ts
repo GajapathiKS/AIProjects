@@ -7,10 +7,10 @@ import { createStudent, initApi } from './seed.util';
 test('create goal and list shows it', async ({ page }) => {
   await login(page);
   const api = await initApi();
-  const studentId = await createStudent(api);
+  const student = await createStudent(api);
   await api.dispose();
 
-  await page.goto(`/students/${studentId}/goals`);
+  await page.goto(`/students/${student.id}/goals`);
   await page.getByRole('link', { name: '+ New Goal' }).click();
   await expect(page.getByRole('heading', { name: 'New Goal' })).toBeVisible();
 
@@ -22,7 +22,7 @@ test('create goal and list shows it', async ({ page }) => {
   await page.getByLabel('Target Date').fill('2025-12-31');
   await page.getByRole('button', { name: 'Create' }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/students/${studentId}/goals$`));
+  await expect(page).toHaveURL(new RegExp(`/students/${student.id}/goals$`));
   const row = page.getByText('pw_goal_desc_' + stamp);
   await expect(row).toBeVisible({ timeout: 10000 });
 });
