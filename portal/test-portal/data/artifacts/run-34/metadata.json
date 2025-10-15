@@ -1,0 +1,20 @@
+{
+  "runId": 34,
+  "triggeredBy": "portal",
+  "startedAt": "2025-10-15T11:25:35.581Z",
+  "environmentId": 1,
+  "entryPoint": "tests/e2e/needs.spec.ts",
+  "playwrightMode": "traditional",
+  "mcpSource": null,
+  "captureArtifacts": true,
+  "steps": [
+    "login",
+    "navigate",
+    "assert"
+  ],
+  "finishedAt": "2025-10-15T11:25:54.142Z",
+  "status": "failed",
+  "summary": "Tests: 0, Failures: 0, Skipped: 0",
+  "report": "report.json",
+  "screenshots": []
+}

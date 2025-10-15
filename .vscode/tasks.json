@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start API",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run"],
+      "options": { "cwd": "backend/src/SpecialPrograms.Api" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    },
+    {
+      "label": "Start Angular App",
+      "type": "shell",
+      "command": "npm",
+      "args": ["start"],
+      "options": { "cwd": "frontend/teks-mvp" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    },
+    {
+      "label": "Test Portal: npm install",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": { "cwd": "portal/test-portal" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    },
+    {
+      "label": "Test Portal: start backend server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start:server"],
+      "options": { "cwd": "portal/test-portal" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    },
+    {
+      "label": "Test Portal: start React UI",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": { "cwd": "portal/test-portal" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    },
+    {
+      "label": "Test Portal: start MCP server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start:mcp"],
+      "options": { "cwd": "portal/test-portal" },
+      "presentation": { "reveal": "always", "panel": "new", "clear": false }
+    }
+  ]
+}

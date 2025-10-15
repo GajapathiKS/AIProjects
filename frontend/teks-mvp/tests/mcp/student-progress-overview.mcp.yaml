@@ -21,23 +21,44 @@ steps:
   - click:
       selector: 'button[type="submit"]'
   - waitFor:
-      selector: 'table.table tbody tr a.btn'
+      selector: 'h1'
+      text: 'Texas TEKS Program Manager'
   - evaluate:
       script: |
-        () => {
-          const firstLink = document.querySelector('table.table tbody tr a.btn');
-          if (!firstLink) {
-            throw new Error('No student rows available to open');
+        (async () => {
+          async function getToken() {
+            const base = 'https://localhost:7140';
+            const creds = [
+              { username: 'admin', password: 'ChangeMe123!' },
+              { username: 'admin', password: 'ChangeMe123!' }
+            ];
+            for (const c of creds) {
+              const r = await fetch(base + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
+              if (r.ok) { const j = await r.json(); return j.token || j.accessToken; }
+            }
+            throw new Error('Failed to obtain auth token');
           }
-          firstLink.click();
+          const token = await getToken();
+          const stamp = Date.now();
+          const payload = {
+            firstName: `mcp_${stamp}_First`,
+            lastName: `mcp_${stamp}_Last`,
+            dateOfBirth: '2012-01-15',
+            gradeLevel: '5',
+            campus: `mcp_${stamp}_Campus`,
+            guardianContact: `mcp_${stamp}_Guardian`,
+            programFocus: `mcp_${stamp}_Focus`,
+            localId: `mcp_${stamp}`,
+            enrollmentDate: '2024-09-01',
+            nextReviewDate: null
+          };
+          const res = await fetch('https://localhost:7140/api/students', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(payload) });
+          if (!res.ok) throw new Error('Failed to seed student');
+          const data = await res.json();
+          const id = String(data.id ?? data);
+          window.location.href = `${window.location.origin}/students/${id}/progress`;
           return true;
-        }
-  - waitFor:
-      selector: '.sidebar a.active'
-      text: 'Info'
-  - clickText:
-      selector: '.sidebar a'
-      text: 'Progress'
+        })()
   - waitFor:
       selector: 'h2'
       text: 'Progress Updates'

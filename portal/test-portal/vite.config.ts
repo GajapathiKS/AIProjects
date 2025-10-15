@@ -6,7 +6,9 @@ export default defineConfig({
   server: {
     port: 4201,
     proxy: {
-      '/api': 'http://localhost:4001'
+      '/api': 'http://localhost:4001',
+      '/artifacts': 'http://localhost:4001',
+      '/data/artifacts': 'http://localhost:4001'
     }
   }
 });

@@ -68,6 +68,37 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
     }
   }
 
+  function writeRunIndex({ status, summary, screenshots }) {
+    try {
+      const lines = [];
+      lines.push('<!doctype html>');
+      lines.push('<meta charset="utf-8"/>');
+      lines.push(`<title>Run ${runId} Artifacts</title>`);
+      lines.push('<style>body{font-family:system-ui,Segoe UI,Arial;margin:20px} .status{padding:2px 6px;border-radius:4px;background:#eee;text-transform:uppercase;font-size:12px} ul{line-height:1.8}</style>');
+      lines.push(`<h1>Run ${runId} <span class="status">${status}</span></h1>`);
+      lines.push(`<p>${summary ?? ''}</p>`);
+      lines.push('<h2>Logs</h2>');
+      lines.push('<ul>');
+      ['stdout.log','stderr.log','report.json','metadata.json'].forEach(file => {
+        if (fs.existsSync(path.join(runFolder, file))) {
+          lines.push(`<li><a href="./${file}">${file}</a></li>`);
+        }
+      });
+      lines.push('</ul>');
+      if (Array.isArray(screenshots) && screenshots.length) {
+        lines.push('<h2>Screenshots</h2>');
+        lines.push('<ul>');
+        screenshots.forEach(sc => {
+          const href = `./${sc.relativePath.replace(/\\/g,'/')}`;
+          const label = sc.title || sc.fileName;
+          lines.push(`<li><a href="${href}">${label}</a></li>`);
+        });
+        lines.push('</ul>');
+      }
+      fs.writeFileSync(path.join(runFolder, 'index.html'), lines.join('\n'));
+    } catch {}
+  }
+
   (async () => {
     try {
       const env = getEnvironmentRow(metadata.environmentId);
@@ -89,7 +120,7 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
         });
       }
       const finish = new Date().toISOString();
-      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
+      const artifactPath = path.join('artifacts', `run-${runId}`).replace(/\\/g,'/');
       const log = `Run ${runId} ${result.status}. ${result.summary}`;
       updateRunRecord(runId, {
         status: result.status,
@@ -106,9 +137,10 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
         report: result.jsonReportPath,
         screenshots: result.screenshots
       });
+      writeRunIndex({ status: result.status, summary: result.summary, screenshots: result.screenshots });
     } catch (error) {
       const finish = new Date().toISOString();
-      const artifactPath = path.relative(process.cwd(), path.join('data', 'artifacts', `run-${runId}`));
+      const artifactPath = path.join('artifacts', `run-${runId}`).replace(/\\/g,'/');
       const log = `Run ${runId} failed to start: ${error?.message ?? error}`;
       updateRunRecord(runId, {
         status: 'failed',
@@ -122,6 +154,7 @@ export function enqueueRun(testCase, triggeredBy = 'manual') {
         status: 'failed',
         error: error?.message ?? String(error)
       });
+      writeRunIndex({ status: 'failed', summary: String(error), screenshots: [] });
     }
   })();
 

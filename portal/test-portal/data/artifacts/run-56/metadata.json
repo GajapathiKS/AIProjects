@@ -1,0 +1,16 @@
+{
+  "runId": 56,
+  "triggeredBy": "auto",
+  "startedAt": "2025-10-15T13:29:16.443Z",
+  "environmentId": 3,
+  "entryPoint": "frontend/teks-mvp/tests/mcp/student-assignments-overview.mcp.yaml",
+  "playwrightMode": "mcp",
+  "mcpSource": "frontend/teks-mvp/tests/mcp/student-assignments-overview.mcp.yaml",
+  "captureArtifacts": true,
+  "steps": [],
+  "finishedAt": "2025-10-15T13:29:20.349Z",
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "report": "transcript.json",
+  "screenshots": []
+}

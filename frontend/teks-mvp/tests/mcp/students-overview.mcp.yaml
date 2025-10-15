@@ -27,9 +27,17 @@ steps:
   - waitFor:
       selector: 'h2'
       text: 'Students'
-  - expectVisible:
-      selector: 'button.btn.primary'
-      text: 'Add Student'
+  # Mirror E2E: Add Student should be disabled until the form is filled
+  - evaluate:
+      script: |
+        () => {
+          const buttons = Array.from(document.querySelectorAll('button'));
+          const target = buttons.find(b => (b.textContent || '').trim().toLowerCase() === 'add student');
+          if (!target) throw new Error('Add Student button not found');
+          const disabled = target.hasAttribute('disabled') || (/** @type {HTMLButtonElement} */(target)).disabled === true;
+          if (!disabled) throw new Error('Add Student button is expected to be disabled');
+          return true;
+        }
   - screenshot:
       name: 'students-overview'
       fullPage: true

@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Student progress overview (MCP)",
+    "description": "Review the progress tab for the first student after authentication to ensure\nthe new progress entry affordances are available for educators.\n",
+    "tags": [
+      "regression",
+      "progress"
+    ]
+  },
+  "config": {
+    "baseUrl": "http://localhost:4200",
+    "browser": "chromium",
+    "headless": true,
+    "timeout": 15000
+  },
+  "steps": [
+    {
+      "action": "screenshot",
+      "status": "failed",
+      "detail": "Not connected"
+    }
+  ],
+  "screenshots": [],
+  "status": "failed",
+  "summary": "Scenario failed: MCP error -32000: Connection closed",
+  "scenarioPath": "C:\\MCP_POCS\\AIProjects\\frontend\\teks-mvp\\tests\\mcp\\student-progress-overview.mcp.yaml"
+}

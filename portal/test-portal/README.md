@@ -112,12 +112,14 @@ Below are curl snippets that exercise the main flows while the API server is run
    ```
 
 5. **Review artifacts**:
-   - Each run gets a folder under `data/artifacts/run-<runId>/` containing:
-     - `metadata.json` – original payload, environment, scheduling info, completion summary.
-     - `stdout.log` / `stderr.log` – raw Playwright output.
-     - `report.json` – parsed Playwright JSON reporter output.
-     - `test-results/` – Playwright trace + attachments.
-     - `screenshots/` – auto-captured evidence with run-aware filenames (includes MCP scenario captures).
+   - Browse: http://localhost:4201/artifacts/run-<runId>/
+   - Each run folder contains:
+     - `index.html` – quick links to logs and screenshots (generated after each run)
+     - `metadata.json` – original payload, environment, schedule, summary
+     - `stdout.log` / `stderr.log` – raw runner output
+     - `report.json` – Playwright JSON reporter (traditional) or `transcript.json` (MCP)
+     - `test-results/` – Playwright trace + attachments (traditional)
+     - `screenshots/` – evidence images (traditional + MCP)
 
 Browse `http://localhost:4201/runs` in the UI to explore the full history, filters, and screenshot links.
 
@@ -145,6 +147,19 @@ MCP scenarios often require API keys (e.g. ChatGPT or GitHub Copilot tokens) as 
    The MCP client runner also respects `PLAYWRIGHT_MCP_USERNAME` and `PLAYWRIGHT_MCP_PASSWORD` environment variables if you prefer not to create a file. When absent, it falls back to the seeded API credentials (`admin / P@ssword1`).
 
 3. **Grant the secrets to your MCP client** (ChatGPT, Copilot, Claude, etc.) following their documentation—each token stays outside of the portal database and is read only when invoking MCP scenarios.
+
+### Trigger an MCP run from Node (for Codex/ChatGPT integrations)
+
+You can programmatically trigger a run via the MCP server using the provided helper script:
+
+```bash
+npm run start:mcp   # in one terminal (server prints "Playwright MCP server is ready.")
+
+# In another terminal:
+npm run mcp:trigger -- --id 5 --title "codex"
+```
+
+This starts the stdio MCP server and uses an MCP client to call `run-test-case`. The output JSON contains the queued run metadata; poll `/api/test-runs/:id` to follow progress and open artifacts at `/artifacts/run-<id>/`.
 
 ## Dual onboarding (traditional + MCP)
 

@@ -123,11 +123,21 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
     const jsonReportPath = path.join(artifactDir, 'report.json');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-    const out = fs.createWriteStream(stdoutPath);
-    const err = fs.createWriteStream(stderrPath);
+  const out = fs.createWriteStream(stdoutPath);
+  const err = fs.createWriteStream(stderrPath);
 
     // Build arguments for Playwright
-    const entry = testCase.entry_point ?? testCase.entryPoint;
+    const entryRaw = testCase.entry_point ?? testCase.entryPoint;
+    // Normalize entry to be relative to the Playwright project directory
+    let entry = entryRaw;
+    if (entry) {
+      const norm = String(entry).replace(/\\/g, '/');
+      if (norm.startsWith('frontend/teks-mvp/')) {
+        entry = norm.substring('frontend/teks-mvp/'.length);
+      } else {
+        entry = norm;
+      }
+    }
     const pwArgs = [
       'test',
       '-c', 'playwright.config.ts',
@@ -182,7 +192,7 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
       fs.appendFileSync(stdoutPath, `\n[runner] cmd: ${cmd}\n[runner] args: ${JSON.stringify(cmdArgs)}\n`);
     } catch {}
 
-    const child = spawn(cmd, cmdArgs, spawnOpts);
+  const child = spawn(cmd, cmdArgs, spawnOpts);
 
     let jsonBuffer = '';
     let report = null;
@@ -193,8 +203,8 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
     child.stderr.on('data', (chunk) => err.write(chunk));
 
     child.on('error', (e) => {
-      try { out.end(); } catch {}
-      try { err.end(); } catch {}
+  try { out.end(); } catch {}
+  try { err.end(); } catch {}
       reject(e);
     });
 
@@ -219,6 +229,10 @@ export function runPlaywright({ runId, testCase, environment, artifactDir }) {
             status = 'failed';
           } else if (total > 0 && skipped === total) {
             status = 'skipped';
+          } else if (!total || total === 0) {
+            // No tests were discovered — most likely an invalid entry path
+            status = 'failed';
+            summary = `No tests found for entry '${entryRaw}'. Check the test case entryPoint path.`;
           }
           summary = `Tests: ${total ?? 'n/a'}, Failures: ${failures}, Skipped: ${skipped ?? 0}`;
         }

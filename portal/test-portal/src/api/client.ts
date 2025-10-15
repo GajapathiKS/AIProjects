@@ -34,24 +34,25 @@ export interface TestCase {
 export interface TestRun {
   id: number;
   testCaseId: number;
-  status: 'running' | 'passed' | 'failed';
+  status: 'running' | 'passed' | 'failed' | 'skipped';
   triggeredBy: string;
   startedAt: string;
   finishedAt?: string;
   log?: string;
   artifactPath?: string;
-  screenshots: {
-    title: string;
-    project?: string;
-    status?: string;
-    fileName: string;
-    relativePath: string;
-  }[];
+  screenshots: Screenshot[];
 }
 
-export interface TestRunDetails extends TestRun {
-  screenshots?: Array<{ title?: string; status?: string; fileName?: string; url: string; }>;
+export interface Screenshot {
+  title: string;
+  project?: string;
+  status?: string;
+  fileName: string;
+  relativePath: string;
+  url?: string; // Provided by GET /api/test-runs/:id
 }
+
+export interface TestRunDetails extends TestRun {}
 
 const apiBase = '/api';
 
