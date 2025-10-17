@@ -376,14 +376,10 @@ export async function runMcpScenario({ runId, testCase, environment, artifactDir
     timeout: config.timeout ? Number(config.timeout) : 15000,
     ...config
   };
-<<<<<<< HEAD
   context.environment.apiBaseUrl = mergedConfig.apiBaseUrl || context.environment.apiBaseUrl || process.env.TEST_API_BASE || 'https://localhost:7140';
   context.config = mergedConfig;
   const allowInsecureApiTls = toBoolean(mergedConfig.allowInsecureApiTls ?? mergedConfig.insecureApiTls ?? mergedConfig.allowInsecureTls);
   const originalRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-=======
-  context.config = mergedConfig;
->>>>>>> main
 
   ensureDir(artifactDir);
   const outputDir = path.join(artifactDir, 'mcp-output');
@@ -402,10 +398,6 @@ export async function runMcpScenario({ runId, testCase, environment, artifactDir
     args.push('--secrets', process.env.MCP_SECRETS_FILE);
   }
 
-<<<<<<< HEAD
-=======
-  const repoRoot = path.resolve(process.cwd(), '..', '..');
->>>>>>> main
   const transport = new StdioClientTransport({
     command: 'npx',
     args,
@@ -428,12 +420,9 @@ export async function runMcpScenario({ runId, testCase, environment, artifactDir
   let reportFile = 'transcript.json';
 
   try {
-<<<<<<< HEAD
     if (allowInsecureApiTls) {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
-=======
->>>>>>> main
     await client.connect(transport);
 
     for (const step of steps) {
@@ -448,7 +437,6 @@ export async function runMcpScenario({ runId, testCase, environment, artifactDir
       // ignore screenshot failure
     }
   } finally {
-<<<<<<< HEAD
     if (allowInsecureApiTls) {
       if (originalRejectUnauthorized === undefined) {
         delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
@@ -460,12 +448,6 @@ export async function runMcpScenario({ runId, testCase, environment, artifactDir
     try {
       await client.close();
     } catch {}
-=======
-    try {
-      await client.close();
-    } catch {}
-    stderrWriter.end();
->>>>>>> main
   }
 
   const transcript = {

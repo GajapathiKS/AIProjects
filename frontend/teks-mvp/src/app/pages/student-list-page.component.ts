@@ -12,8 +12,8 @@ import { StudentSummary } from '../models/student';
   template: `
     <div class="card">
       <div style="display:flex; align-items:center; justify-content: space-between;">
-        <h2>Students</h2>
-        <button class="btn primary" type="submit" form="onboardForm" [disabled]="form.invalid || form.pending">Add Student</button>
+        <h2 data-testid="students-heading">Students</h2>
+        <button data-testid="add-student" class="btn primary" type="submit" form="onboardForm" [disabled]="form.invalid || form.pending">Add Student</button>
       </div>
       <form id="onboardForm" [formGroup]="form" (ngSubmit)="submit()" class="form-grid" style="margin-top:.75rem;">
         <div class="form-grid">

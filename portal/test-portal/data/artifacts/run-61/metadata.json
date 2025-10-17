@@ -1,0 +1,14 @@
+{
+  "runId": 61,
+  "triggeredBy": "portal",
+  "startedAt": "2025-10-17T08:58:44.373Z",
+  "environmentId": 3,
+  "entryPoint": "frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml",
+  "playwrightMode": "mcp",
+  "mcpSource": "frontend/teks-mvp/tests/mcp/students-overview.mcp.yaml",
+  "captureArtifacts": true,
+  "steps": [],
+  "finishedAt": "2025-10-17T08:58:44.394Z",
+  "status": "failed",
+  "error": "__dirname is not defined"
+}
